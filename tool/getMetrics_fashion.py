@@ -110,6 +110,7 @@ def test(generated_images_dir, annotations_file_test):
 
 
 if __name__ == "__main__":
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
     # fix these paths
     generated_images_dir = 'results_v1.0/fashion_PATN_v1.0/test_latest/images'
     annotations_file_test = 'fashion_data/fasion-resize-annotation-test.csv'
