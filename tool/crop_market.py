@@ -12,7 +12,7 @@ for item in os.listdir(img_dir):
 	if not item.endswith('.jpg') and not item.endswith('.png'):
 		continue
 	cnt = cnt + 1
-	print('%d/12000 ...' %(cnt))
+	print(('%d/12000 ...' %(cnt)))
 	img = Image.open(os.path.join(img_dir, item))
 	# for 5 split
 	imgcrop = img.crop((256, 0, 320, 128))

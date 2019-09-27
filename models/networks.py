@@ -7,7 +7,7 @@ import numpy as np
 import torch.nn.functional as F
 
 import sys
-from models.model_variants import PATNetwork
+from .model_variants import PATNetwork
 
 def weights_init_normal(m):
     classname = m.__class__.__name__
@@ -57,7 +57,7 @@ def weights_init_orthogonal(m):
 
 
 def init_weights(net, init_type='normal'):
-    print('initialization method [%s]' % init_type)
+    print(('initialization method [%s]' % init_type))
     if init_type == 'normal':
         net.apply(weights_init_normal)
     elif init_type == 'xavier':
@@ -149,7 +149,7 @@ def print_network(net):
     for param in net.parameters():
         num_params += param.numel()
     print(net)
-    print('Total number of parameters: %d' % num_params)
+    print(('Total number of parameters: %d' % num_params))
 
 
 ##############################################################################

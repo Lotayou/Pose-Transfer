@@ -100,19 +100,19 @@ def test(generated_images_dir, annotations_file_test):
 
     print ("Compute inception score...")
     inception_score = get_inception_score(generated_images)
-    print ("Inception score %s" % inception_score[0])
+    print(("Inception score %s" % inception_score[0]))
 
     print ("Compute structured similarity score (SSIM)...")
     structured_score = ssim_score(generated_images, target_images)
-    print ("SSIM score %s" % structured_score)
+    print(("SSIM score %s" % structured_score))
 
-    print ("Inception score = %s; SSIM score = %s" % (inception_score, structured_score))
+    print(("Inception score = %s; SSIM score = %s" % (inception_score, structured_score)))
 
 
 if __name__ == "__main__":
     os.environ['CUDA_VISIBLE_DEVICES'] = '1'
     # fix these paths
-    generated_images_dir = 'results_v1.0/fashion_PATN_v1.0/test_latest/images'
+    generated_images_dir = 'results/fashion_PATN_v1.0/test_latest/images'
     annotations_file_test = 'fashion_data/fasion-resize-annotation-test.csv'
 
     test(generated_images_dir, annotations_file_test)

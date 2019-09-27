@@ -29,10 +29,10 @@ def compute_pose(image_dir, annotations_file, savePath):
     image_size = (128, 64)
     cnt = len(annotations_file)
     for i in range(cnt):
-        print('processing %d / %d ...' %(i, cnt))
+        print(('processing %d / %d ...' %(i, cnt)))
         row = annotations_file.iloc[i]
         name = row.name
-        print(savePath, name)
+        print((savePath, name))
         file_name = os.path.join(savePath, name + '.npy')
         kp_array = load_pose_cords_from_strings(row.keypoints_y, row.keypoints_x)
         pose = cords_to_map(kp_array, image_size)

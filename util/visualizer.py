@@ -22,7 +22,7 @@ class Visualizer():
         if self.use_html:
             self.web_dir = os.path.join(opt.checkpoints_dir, opt.name, 'web')
             self.img_dir = os.path.join(self.web_dir, 'images')
-            print('create web directory %s...' % self.web_dir)
+            print(('create web directory %s...' % self.web_dir))
             util.mkdirs([self.web_dir, self.img_dir])
         self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
         with open(self.log_name, "a") as log_file:
@@ -37,7 +37,7 @@ class Visualizer():
         if self.display_id > 0:  # show images in the browser
             ncols = self.opt.display_single_pane_ncols
             if ncols > 0:
-                h, w = next(iter(visuals.values())).shape[:2]
+                h, w = next(iter(list(visuals.values()))).shape[:2]
                 table_css = """<style>
                         table {border-collapse: separate; border-spacing:4px; white-space:nowrap; text-align:center}
                         table td {width: %dpx; height: %dpx; padding: 4px; outline: 4px solid black}
@@ -45,10 +45,10 @@ class Visualizer():
                 title = self.name
                 label_html = ''
                 label_html_row = ''
-                nrows = int(np.ceil(len(visuals.items()) / ncols))
+                nrows = int(np.ceil(len(list(visuals.items())) / ncols))
                 images = []
                 idx = 0
-                for label, image_numpy in visuals.items():
+                for label, image_numpy in list(visuals.items()):
                     label_html_row += '<td>%s</td>' % label
                     images.append(image_numpy.transpose([2, 0, 1]))
                     idx += 1
@@ -70,14 +70,14 @@ class Visualizer():
                               opts=dict(title=title + ' labels'))
             else:
                 idx = 1
-                for label, image_numpy in visuals.items():
+                for label, image_numpy in list(visuals.items()):
                     self.vis.image(image_numpy.transpose([2, 0, 1]), opts=dict(title=label),
                                    win=self.display_id + idx)
                     idx += 1
 
         if self.use_html and (save_result or not self.saved):  # save images to a html file
             self.saved = True
-            for label, image_numpy in visuals.items():
+            for label, image_numpy in list(visuals.items()):
                 img_path = os.path.join(self.img_dir, 'epoch%.3d_%s.png' % (epoch, label))
                 util.save_image(image_numpy, img_path)
             # update website
@@ -88,7 +88,7 @@ class Visualizer():
                 txts = []
                 links = []
 
-                for label, image_numpy in visuals.items():
+                for label, image_numpy in list(visuals.items()):
                     img_path = 'epoch%.3d_%s.png' % (n, label)
                     ims.append(img_path)
                     txts.append(label)
@@ -115,7 +115,7 @@ class Visualizer():
     # errors: same format as |errors| of plotCurrentErrors
     def print_current_errors(self, epoch, i, errors, t):
         message = '(epoch: %d, iters: %d, time: %.3f) ' % (epoch, i, t)
-        for k, v in errors.items():
+        for k, v in list(errors.items()):
             message += '%s: %.3f ' % (k, v)
 
         print(message)
@@ -133,7 +133,7 @@ class Visualizer():
         txts = []
         links = []
 
-        for label, image_numpy in visuals.items():
+        for label, image_numpy in list(visuals.items()):
             image_name = '%s_%s.jpg' % (image_path[0], label)
             save_path = os.path.join(image_dir, image_name)
             #print(save_path)

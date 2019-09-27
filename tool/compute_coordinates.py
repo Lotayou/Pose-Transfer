@@ -45,10 +45,10 @@ def compute_cordinates(heatmap_avg, paf_avg, th1=0.1, th2=0.05):
         map_down[:,:-1] = map[:,1:]
 
         peaks_binary = np.logical_and.reduce((map>=map_left, map>=map_right, map>=map_up, map>=map_down, map > th1))
-        peaks = zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]) # note reverse
+        peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0])) # note reverse
 
         peaks_with_score = [x + (map_ori[x[1],x[0]],) for x in peaks]
-        id = range(peak_counter, peak_counter + len(peaks))
+        id = list(range(peak_counter, peak_counter + len(peaks)))
         peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
 
         all_peaks.append(peaks_with_score_and_id)
@@ -73,8 +73,8 @@ def compute_cordinates(heatmap_avg, paf_avg, th1=0.1, th2=0.05):
                     norm = np.sqrt(vec[0]*vec[0] + vec[1]*vec[1])
                     vec = np.divide(vec, norm)
 
-                    startend = zip(np.linspace(candA[i][0], candB[j][0], num=mid_num),
-                                   np.linspace(candA[i][1], candB[j][1], num=mid_num))
+                    startend = list(zip(np.linspace(candA[i][0], candB[j][0], num=mid_num),
+                                   np.linspace(candA[i][1], candB[j][1], num=mid_num)))
 
                     vec_x = np.array([score_mid[int(round(startend[I][1])), int(round(startend[I][0])), 0]
                                       for I in range(len(startend))])
@@ -129,7 +129,7 @@ def compute_cordinates(heatmap_avg, paf_avg, th1=0.1, th2=0.05):
                         subset[j][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
                 elif found == 2: # if found 2 and disjoint, merge them
                     j1, j2 = subset_idx
-                    print "found = 2"
+                    print("found = 2")
                     # print("found = 2")
                     membership = ((subset[j1]>=0).astype(int) + (subset[j2]>=0).astype(int))[:-2]
                     if len(np.nonzero(membership == 2)[0]) == 0: #merge
@@ -192,7 +192,7 @@ if os.path.exists(output_path):
 else:
     result_file = open(output_path, 'w')
     processed_names = set()
-    print >> result_file, 'name:keypoints_y:keypoints_x'
+    print('name:keypoints_y:keypoints_x', file=result_file)
 
 # for image_name in tqdm(os.listdir(input_folder)):
 for image_name in tqdm(img_list):
@@ -224,5 +224,5 @@ for image_name in tqdm(img_list):
 
     pose_cords = compute_cordinates(heatmap_avg, paf_avg)
 
-    print >> result_file, "%s: %s: %s" % (image_name, str(list(pose_cords[:, 0])), str(list(pose_cords[:, 1])))
+    print("%s: %s: %s" % (image_name, str(list(pose_cords[:, 0])), str(list(pose_cords[:, 1]))), file=result_file)
     result_file.flush()

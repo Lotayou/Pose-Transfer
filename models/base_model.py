@@ -62,4 +62,4 @@ class BaseModel(nn.Module):
         for scheduler in self.schedulers:
             scheduler.step()
         lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate = %.7f' % lr)
+        print(('learning rate = %.7f' % lr))

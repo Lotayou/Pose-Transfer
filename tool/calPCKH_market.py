@@ -107,7 +107,7 @@ for i in range(pRows):
 	nCorrect = nCorrect + how_many_right_seq(pxcords, pycords, txcords, tycords, head_size, alpha)
 
 
-print('%d/%d %f' %(nCorrect, nAll, nCorrect*1.0/nAll))
+print(('%d/%d %f' %(nCorrect, nAll, nCorrect*1.0/nAll)))
 
 
 

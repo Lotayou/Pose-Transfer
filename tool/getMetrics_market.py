@@ -85,35 +85,35 @@ def load_generated_images(images_folder):
 
 
 def test(generated_images_dir, annotations_file_test):
-    print(generated_images_dir, annotations_file_test)
+    print((generated_images_dir, annotations_file_test))
     print ("Loading images...")
     input_images, target_images, generated_images, names = load_generated_images(generated_images_dir)
 
     print ("Compute inception score...")
     inception_score = get_inception_score(generated_images)
-    print ("Inception score %s" % inception_score[0])
+    print(("Inception score %s" % inception_score[0]))
 
 
     print ("Compute structured similarity score (SSIM)...")
     structured_score = ssim_score(generated_images, target_images)
-    print ("SSIM score %s" % structured_score)
+    print(("SSIM score %s" % structured_score))
 
     print ("Compute l1 score...")
     norm_score = l1_score(generated_images, target_images)
-    print ("L1 score %s" % norm_score)
+    print(("L1 score %s" % norm_score))
 
     print ("Compute masked inception score...")
     generated_images_masked = create_masked_image(names, generated_images, annotations_file_test)
     reference_images_masked = create_masked_image(names, target_images, annotations_file_test)
     inception_score_masked = get_inception_score(generated_images_masked)
-    print ("Inception score masked %s" % inception_score_masked[0])
+    print(("Inception score masked %s" % inception_score_masked[0]))
 
     print ("Compute masked SSIM...")
     structured_score_masked = ssim_score(generated_images_masked, reference_images_masked)
-    print ("SSIM score masked %s" % structured_score_masked)
+    print(("SSIM score masked %s" % structured_score_masked))
 
-    print ("Inception score = %s, masked = %s; SSIM score = %s, masked = %s; l1 score = %s" %
-           (inception_score, inception_score_masked, structured_score, structured_score_masked, norm_score))
+    print(("Inception score = %s, masked = %s; SSIM score = %s, masked = %s; l1 score = %s" %
+           (inception_score, inception_score_masked, structured_score, structured_score_masked, norm_score)))
 
 
 
