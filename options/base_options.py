@@ -54,6 +54,9 @@ class BaseOptions():
         self.parser.add_argument('--G_n_downsampling', type=int, default=2, help='down-sampling blocks for generator')
         self.parser.add_argument('--D_n_downsampling', type=int, default=2, help='down-sampling blocks for discriminator')
 
+        ### 20180927 Yang Lingbo
+        # Add funit config
+        self.parser.add_argument('--funit_options', type=str, default='./models/FUNIT_module/funit_fashion.yaml', help='configuration file for funit module')
         self.initialized = True
 
     def parse(self):
@@ -77,7 +80,7 @@ class BaseOptions():
 
         print('------------ Options -------------')
         for k, v in sorted(args.items()):
-            print('%s: %s' % (str(k), str(v)))
+            print(('%s: %s' % (str(k), str(v))))
         print('-------------- End ----------------')
 
         # save to the disk

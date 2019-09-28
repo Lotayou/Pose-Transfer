@@ -22,7 +22,7 @@ cudnn.benchmark = True
 parser = argparse.ArgumentParser()
 parser.add_argument('--config',
                     type=str,
-                    default='configs/funit_animals.yaml',
+                    default='funit_animals.yaml',
                     help='configuration file for training and testing')
 parser.add_argument('--output_path',
                     type=str,

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import torch
 from torch import nn
@@ -24,7 +24,7 @@ class L1_plus_perceptualLoss(nn.Module):
                 break
         self.vgg_submodel = torch.nn.DataParallel(self.vgg_submodel, device_ids=gpu_ids).cuda()
 
-        print(self.vgg_submodel)
+        print((self.vgg_submodel))
 
     def forward(self, inputs, targets):
         if self.lambda_L1 == 0 and self.lambda_perceptual == 0:
