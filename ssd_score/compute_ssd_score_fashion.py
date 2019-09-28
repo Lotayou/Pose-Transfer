@@ -74,4 +74,4 @@ if __name__ == "__main__":
         imgs.append(img)
 
     sc = SSDScorer()
-    print (sc.get_score_image_set(imgs))
+    print((sc.get_score_image_set(imgs)))

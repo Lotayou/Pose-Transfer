@@ -1,0 +1,9 @@
+checkpoints/*
+fashion_data/*
+market_data/*
+*.pth
+*.npy
+*.h5
+*.pyc
+*.caffemodel
+results/*

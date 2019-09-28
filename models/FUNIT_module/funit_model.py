@@ -8,7 +8,7 @@ import copy
 import torch
 import torch.nn as nn
 
-from networks import FewShotGen, GPPatchMcResDis
+from .networks import FewShotGen, GPPatchMcResDis
 
 
 def recon_criterion(predict, target):
