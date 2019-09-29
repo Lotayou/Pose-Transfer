@@ -1,0 +1,12 @@
+(yanglingbo) vcl@vcl-dl-2:/backup1/lingboyang/CVPR2019_pose_transfer$ python tool/getMetrics_fashion.py
+/home/vcl/anaconda3/envs/yanglingbo/lib/python3.6/importlib/_bootstrap.py:219: RuntimeWarning: compiletime version 3.5 of module 'tensorflow.python.framework.fast_tensor_util' does not match runtime version 3.6
+  return f(*args, **kwds)
+2019-07-03 15:42:34.560835: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+Loading images...
+Compute inception score...
+.2019-07-03 15:44:09.852625: W tensorflow/core/framework/op_def_util.cc:334] Op BatchNormWithGlobalNormalization is deprecated. It will cease to work in GraphDef version 9. Use tf.nn.batch_normalization().
+........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................Inception score 3.2158465
+Compute structured similarity score (SSIM)...
+SSIM score 0.7725931243170262
+Inception score = (3.2158465, 0.06802187); SSIM score = 0.7725931243170262
+(yanglingbo) vcl@vcl-dl-2:/backup1/lingboyang/CVPR2019_pose_transfer$
