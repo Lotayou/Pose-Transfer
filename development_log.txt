@@ -1,19 +1,19 @@
 20190928
-
-Current Progress:
 # Creating new dataset with bundled reference image of the same person.
 # Creating two stage model backbone and I/O interface.
 
+20190930
+# Dataset: Adding FUNIT class label (Is it really necessary to set each person as a class?)
+# Model: For training stage, just append ground truth as class image
+
+20191001
+# Model: Integrating PATN and FUNIT models together, forward, backward and updating(not tested)
+    @ TODO: Implementing scheduler mechanism for funit and patn.
+        Scheduler: fix PATN and updating FUNIT for K epochs, then set PATN learning rate to 1/10 of FUNIT and
+        continue for another K epochs (K=30?)
+    @ TODO: pay attention if FUNIT need square input, and padding zeros if necessary
+    @ TODO: implementing saving and logging utils.
+    @ TODO: Testing.
+
 Work to do:
-# Dataset: Check FUNIT network design to see if it accept target class images with varying length. 
-	If not, designating K=3 and drop all batches with less than 3 reference images (modify __getitem__).
-
-# Model: Write forward and backward functions. Pay attention to the input size
-	PATN truncates left and right edges by default, leading to an output
-	of size (256*176*3), pay attention if FUNIT need square input, and 
-	padding zeros if necessary.
-
-# Loss Function: Using recon + GAN + FM for now.
-
-# Scheduler: fix PATN and updating FUNIT for K epochs, then set PATN learning rate to 1/10 of FUNIT and 
-	continue for another K epochs (K=30?)
+# Using A for class reference, or use more than one image? Try both case and perform ablation study.

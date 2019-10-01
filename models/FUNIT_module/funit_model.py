@@ -14,7 +14,6 @@ from .networks import FewShotGen, GPPatchMcResDis
 def recon_criterion(predict, target):
     return torch.mean(torch.abs(predict - target))
 
-
 class FUNITModel(nn.Module):
     def __init__(self, hp):
         super(FUNITModel, self).__init__()
@@ -47,7 +46,7 @@ class FUNITModel(nn.Module):
             l_total = (hp['gan_w'] * l_adv + hp['r_w'] * l_x_rec + hp[
                 'fm_w'] * (l_c_rec + l_m_rec))
             l_total.backward()
-            return l_total, l_adv, l_x_rec, l_c_rec, l_m_rec, acc
+            return xt, l_total, l_adv, l_x_rec, l_c_rec, l_m_rec, acc
         elif mode == 'dis_update':
             xb.requires_grad_()
             l_real_pre, acc_r, resp_r = self.dis.calc_dis_real_loss(xb, lb)
@@ -66,7 +65,7 @@ class FUNITModel(nn.Module):
             l_fake.backward()
             l_total = l_fake + l_real + l_reg
             acc = 0.5 * (acc_f + acc_r)
-            return l_total, l_fake_p, l_real_pre, l_reg_pre, acc
+            return xt, l_total, l_fake_p, l_real_pre, l_reg_pre, acc
         else:
             assert 0, 'Not support operation'
 

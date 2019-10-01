@@ -69,7 +69,7 @@ class TransferModel(BaseModel):
             elif opt.L1_type == 'l1_plus_perL1':
                 self.criterionL1 = L1_plus_perceptualLoss(opt.lambda_A, opt.lambda_B, opt.perceptual_layers, self.gpu_ids, opt.percep_is_l1)
             else:
-                raise Excption('Unsurportted type of L1!')
+                raise Exception('Unsurportted type of L1!')
             # initialize optimizers
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             if opt.with_D_PB:

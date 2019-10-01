@@ -7,3 +7,4 @@ market_data/*
 *.pyc
 *.caffemodel
 results/*
+*idea/*
