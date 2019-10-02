@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 import os
 import yaml
 from collections import OrderedDict
@@ -15,8 +14,10 @@ import torch
 from .PATN import TransferModel
 from .FUNIT_module.funit_model import FUNITModel
 
+
 def recon_criterion(predict, target):
     return torch.mean(torch.abs(predict - target))
+
 
 def update_average(model_tgt, model_src, beta=0.999):
     with torch.no_grad():
@@ -25,6 +26,12 @@ def update_average(model_tgt, model_src, beta=0.999):
             p_src = param_dict_src[p_name]
             assert(p_src is not p_tgt)
             p_tgt.copy_(beta*p_tgt + (1. - beta)*p_src)
+
+
+def tensor2im(T):
+    # TODO: double check if input tensor range is [0,1] or [-1,1]
+    return (255.0 * T.detach().cpu().numpy().transpoe(1, 2, 0)).astype(np.uint8)
+
 
 class PatnFunitModel(BaseModel):
     def name(self):
@@ -44,10 +51,7 @@ class PatnFunitModel(BaseModel):
             self.load_network(self.funit_model.gen_test, 'net_G_test(funit)', which_epoch)
             self.load_network(self.funit_model.gen, 'net_G(funit)', which_epoch)
             self.load_network(self.funit_model.dis, 'net_D(funit)', which_epoch)
-            
-            # load schedulers for funit model
-            # self.load_network(self.funit_model.gen_opt)
-        
+
         # set optimizers
         if self.isTrain:
             funit_dis_params = list(self.funit_model.dis.parameters())
@@ -63,20 +67,17 @@ class PatnFunitModel(BaseModel):
             self.funit_dis_scheduler = networks.get_scheduler(self.funit_dis_opt, self.funit_opt)
             self.funit_gen_scheduler = networks.get_scheduler(self.funit_gen_opt, self.funit_opt)
 
-            # TODO: adding a switch FIX_PATN: if enabled, fix PATN parameters
-            #   adding a configuration option in base_options.py
-            '''
-            if not self.fix_patn:
-                self.patn_gen_opt = torch.optim.Adam(self.patn_model.netG.parameters(),
-                                                     lr=opt.lr, betas=(opt.beta1, 0.999))
-                self.patn_scheduler = networks.get_scheduler(self.patn_gen_opt)
-
-            '''
-
+            # NOTE: We only attach scheduler to funit modules for now.
+            self.schedulers = [
+                self.funit_dis_scheduler,
+                self.funit_gen_scheduler,
+            ]
             if opt.continue_train:
                 which_epoch = opt.which_epoch
                 self.load_network(self.funit_dis_scheduler, 'net_D_scheduler(funit)', which_epoch)
                 self.load_network(self.funit_gen_scheduler, 'net_G_scheduler(funit)', which_epoch)
+
+            self.fix_patn = True
 
             
         # print info
@@ -88,6 +89,7 @@ class PatnFunitModel(BaseModel):
             if opt.with_D_PP:
                 networks.print_network(self.patn_model.netD_PP)
         networks.print_network(self.funit_model.gen)
+        networks.print_network(self.funit_model.gen_test)
         networks.print_network(self.funit_model.dis)
         print('-----------------------------------------------')
 
@@ -104,7 +106,6 @@ class PatnFunitModel(BaseModel):
         self.save_network(self.funit_model.dis, 'net_D(funit)', label, self.gpu_ids)
         self.save_network(self.funit_model.gen, 'net_G_scheduler(funit)', label, self.gpu_ids)
         self.save_network(self.funit_model.dis, 'net_D_scheduler(funit)', label, self.gpu_ids)
-        
     
     def set_input(self, input):
         # TODO: change dataset structure, automatically load all ground_truth images of the same person
@@ -134,7 +135,6 @@ class PatnFunitModel(BaseModel):
                         Ys = (y1,y2,...yk) ------------|                      |---> real/fake?
                                                                       P2 -----|
 
-        Note:
             20191001:
             TODO:
                 Two different schemes for training
@@ -146,11 +146,15 @@ class PatnFunitModel(BaseModel):
         Input is set with self.set_input(self, input)
         '''
         # stage I: PATN forward
+        # note: we fix patn for now, therefore the context encoder
+
         with torch.no_grad():
             G_input = [self.input_P1,
                    torch.cat((self.input_BP1, self.input_BP2), 1)]
-            self.stage_I_output = self.patn_model.netG(G_input)
+            patn_fake_p2 = self.patn_model.netG(G_input)
 
+        # self.stage_I_output = patn_fake_p2.detach() if self.fix_patn else patn_fake_p2.requires_grad_()
+        self.stage_II_output = patn_fake_p2
         bundle_content = (self.stage_I_output, self.input_label)
         bundle_class = (self.input_P1, self.input_label)  # mode A
 
@@ -161,21 +165,37 @@ class PatnFunitModel(BaseModel):
 
         # FUNIT (and PATN) generator update
         self.funit_gen_opt.zero_grad()
+        if not self.fix_patn:
+            self.patn_model.optimizer_G.zero_grad()
         '''
         if not self.opt.fix_patn:
             self.patn_gen_opt.zero_grad()
         '''
-        self.stage_II_output, _ = self.funit_model(bundle_content, bundle_class, self.funit_opt, 'gen_update')
+        self.stage_II_output, self.loss_dict = self.funit_model(bundle_content, bundle_class, self.funit_opt, 'gen_update')
         self.funit_gen_opt.step()
         this_model = self.funit_model.module if self.opt.multigpus else self.funit_model
         update_average(this_model.gen_test, this_model.gen)
+        if not self.fix_patn:
+            self.patn_model.optimizer_G.step()
 
         torch.cuda.synchronize()
 
     def get_current_visuals(self):
-        pass
+        # 2 by 3:
+        # A, PA, B'
+        # B, PB, B''
+        visual_tensor = torch.cat((
+            torch.cat((self.input_P1[0], self.input_BP1[0], self.stage_I_output), dim=2),
+            torch.cat((self.input_P2[0], self.input_BP2[0], self.stage_II_output), dim=2),
+        ), dim=1)
+        return tensor2im(visual_tensor)
         
-    def get_error_log(self):
-        pass
-        
-    
+    def get_error_log(self, iter_num):
+        log = 'Iter %d' % iter_num
+        for k, v in self.loss_dict.items():
+            log += '%s: %s, ' % (k, v)
+        return log
+
+    def activating_patn(self):
+        self.fix_patn = False
+

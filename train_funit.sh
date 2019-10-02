@@ -1,0 +1,1 @@
+python train_funit.py --name debug --dataroot ./fashion_data --niter 100 --niter_decay 100

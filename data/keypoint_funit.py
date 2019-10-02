@@ -44,6 +44,8 @@ class KeyFUNITDataset(BaseDataset):
         with open(os.path.join(opt.path.join(opt.dataroot, opt.phase + '_labels.pickle')), 'rb') as f:
             self.labels = pickle.load(f)
 
+        self.size = min(self.size, opt.max_dataset_size)
+
     def init_categories(self, pairLst):
         pairs_file_train = pd.read_csv(pairLst)
         self.size = len(pairs_file_train)
@@ -120,10 +122,7 @@ class KeyFUNITDataset(BaseDataset):
                 'label': label}
 
     def __len__(self):
-        if self.opt.phase == 'train':
-            return 4000
-        elif self.opt.phase == 'test':
-            return self.size
+        return self.size
 
     def name(self):
         return 'KeyFUNITDataset'

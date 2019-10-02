@@ -8,12 +8,18 @@
 
 20191001
 # Model: Integrating PATN and FUNIT models together, forward, backward and updating(not tested)
-    @ TODO: Implementing scheduler mechanism for funit and patn.
-        Scheduler: fix PATN and updating FUNIT for K epochs, then set PATN learning rate to 1/10 of FUNIT and
-        continue for another K epochs (K=30?)
     @ TODO: pay attention if FUNIT need square input, and padding zeros if necessary
     @ TODO: implementing saving and logging utils.
     @ TODO: Testing.
 
+20191002:
+# Saving and logging utils complete.
+# Square padding check: FUNIT network performs 4 downsampling at most, leading to 16* spatial scaling.
+    Current input (256, 176) should be fine. Wait until runtime-check.
+# Training scheme I: Fix patn, scheduling on FUNIT only. Start training ASAP.
+
+
 Work to do:
 # Using A for class reference, or use more than one image? Try both case and perform ablation study.
+# Implementing scheduler mechanism for funit and patn: fix PATN and updating FUNIT for K epochs,
+    then set PATN learning rate to 1/10 of FUNIT and continue for another K epochs (K=30?)

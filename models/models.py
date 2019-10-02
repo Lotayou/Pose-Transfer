@@ -7,15 +7,13 @@ def create_model(opt):
         assert opt.dataset_mode == 'keypoint'
         from .PATN import TransferModel
         model = TransferModel()
-        model.initialize(opt)
     elif opt.model == 'PATN_FUNIT':
-        assert opt.dataset_mode == 'keypoint'
-        from .ylb_two_stage import PatnFunitModel
+        assert opt.dataset_mode == 'keypoint_funit'
+        from .PATN_FUNIT import PatnFunitModel
         model = PatnFunitModel()
-        model.initialize(opt['patn'], opt['funit'])
-
     else:
         raise ValueError("Model [%s] not recognized." % opt.model)
-    
+
+    model.initialize(opt)
     print(("model [%s] was created" % (model.name())))
     return model
