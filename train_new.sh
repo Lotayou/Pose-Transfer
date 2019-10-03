@@ -1,0 +1,2 @@
+# python train_patn_funit.py --name TWO_STAGE_FIX_PATN --nThreads 4 --batchSize 8 --gpu_ids 0,2 --dataroot ./fashion_data --resize_or_crop no --which_model_netG PATN --norm instance --niter 100 --niter_decay 100 --pairLst ./fashion_data/fasion-resize-pairs-train.csv
+nohup python train_patn_funit.py --name TWO_STAGE_FIX_PATN --nThreads 4 --batchSize 8 --gpu_ids 0,2 --dataroot ./fashion_data --resize_or_crop no --which_model_netG PATN --norm instance --niter 100 --niter_decay 100 --pairLst ./fashion_data/fasion-resize-pairs-train.csv > train_log_fix_patn_20191003.txt &

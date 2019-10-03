@@ -12,7 +12,6 @@ class BaseOptions():
     def initialize(self):
         self.parser.add_argument('--dataroot', required=True, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
         self.parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
-        self.parser.add_argument('--max_dataset_size', type=int, default=1000000, help='max dataset size')
         self.parser.add_argument('--loadSize', type=int, default=286, help='scale images to this size')
         self.parser.add_argument('--fineSize', type=int, default=256, help='then crop to this size')
         self.parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels')
@@ -42,14 +41,12 @@ class BaseOptions():
         self.parser.add_argument('--init_type', type=str, default='normal', help='network initialization [normal|xavier|kaiming|orthogonal]')
 
         self.parser.add_argument('--P_input_nc', type=int, default=3, help='# of input image channels')
-        self.parser.add_argument('--BP_input_nc', type=int, default=1, help='# of input image channels')
+        self.parser.add_argument('--BP_input_nc', type=int, default=18, help='# of input image channels')  # openpose 18-keypoint
         self.parser.add_argument('--padding_type', type=str, default='reflect', help='# of input image channels')
         self.parser.add_argument('--pairLst', type=str, default='./keypoint_data/market-pairs-train.csv', help='market pairs')
 
         self.parser.add_argument('--with_D_PP', type=int, default=1, help='use D to judge P and P is pair or not')
         self.parser.add_argument('--with_D_PB', type=int, default=1, help='use D to judge P and B is pair or not')
-
-        self.parser.add_argument('--use_flip', type=int, default=0, help='flip or not')
 
         # down-sampling times
         self.parser.add_argument('--G_n_downsampling', type=int, default=2, help='down-sampling blocks for generator')
@@ -60,11 +57,22 @@ class BaseOptions():
         self.parser.add_argument('--funit_options', type=str, default='./models/FUNIT_module/funit_fashion.yaml', help='configuration file for funit module')
         self.initialized = True
 
-    def parse(self):
+    ### 20191003: Add debug mode options
+    def parse(self, use_debug_mode=False):
         if not self.initialized:
             self.initialize()
         self.opt = self.parser.parse_args()
         self.opt.isTrain = self.isTrain   # train or test
+        
+        if use_debug_mode:
+            self.opt.niter = 2
+            self.opt.niter_decay = 2
+            self.opt.batchSize = 2
+            self.opt.max_dataset_size = 20
+            self.opt.print_freq = 1
+            self.opt.save_latest_freq = 2
+            self.opt.save_epoch_freq = 2
+            self.opt.name = 'debug'
 
         str_ids = self.opt.gpu_ids.split(',')
         self.opt.gpu_ids = []

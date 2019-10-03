@@ -20,6 +20,7 @@ class BaseModel(nn.Module):
 
         if not os.path.isdir(self.save_dir):
             os.makedirs(self.save_dir)
+        if not os.path.isdir(os.path.join(self.save_dir, 'images')):
             os.makedirs(os.path.join(self.save_dir, 'images'))
 
     def set_input(self, input):
@@ -51,9 +52,7 @@ class BaseModel(nn.Module):
     def save_network(self, network, network_label, epoch_label, gpu_ids):
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
-        torch.save(network.cpu().state_dict(), save_path)
-        if len(gpu_ids) and torch.cuda.is_available():
-            network.cuda(gpu_ids[0])
+        torch.save(network.state_dict(), save_path)
 
     # helper loading function that can be used by subclasses
     def load_network(self, network, network_label, epoch_label):
@@ -65,5 +64,6 @@ class BaseModel(nn.Module):
     def update_learning_rate(self):
         for scheduler in self.schedulers:
             scheduler.step()
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print(('learning rate = %.7f' % lr))
+        print('Learning rate updated')
+        # lr = self.optimizers[0].param_groups[0]['lr']
+        # print(('learning rate = %.7f' % lr))

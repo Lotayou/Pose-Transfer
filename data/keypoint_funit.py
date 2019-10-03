@@ -34,14 +34,14 @@ class KeyFUNITDataset(BaseDataset):
         self.root = opt.dataroot
         self.dir_P = os.path.join(opt.dataroot, opt.phase)  # person images
         self.dir_K = os.path.join(opt.dataroot, opt.phase + 'K')  # keypoints
-        self.dir_C = os.path.join(opt.dataroot, opt.phase + '_class')  # class bundle, each person a class
+        self.dir_C = os.path.join(opt.dataroot, opt.phase + '_classes')  # class bundle, each person a class
         if not os.path.isdir(self.dir_C):
             make_person_classes(self.dir_P, self.dir_C)
 
         self.init_categories(opt.pairLst)
         self.transform = get_transform(opt)
 
-        with open(os.path.join(opt.path.join(opt.dataroot, opt.phase + '_labels.pickle')), 'rb') as f:
+        with open(os.path.join(opt.dataroot, opt.phase + '_classes.pickle'), 'rb') as f:
             self.labels = pickle.load(f)
 
         self.size = min(self.size, opt.max_dataset_size)
@@ -78,17 +78,17 @@ class KeyFUNITDataset(BaseDataset):
         BP2_img = np.load(BP2_path)
 
         # use flip
-        if self.opt.phase == 'train' and self.opt.use_flip:
-            # print ('use_flip ...')
-            flip_random = random.uniform(0, 1)
+        if self.opt.phase == 'train':
+            if not self.opt.no_flip:
+                flip_random = random.uniform(0, 1)
 
-            if flip_random > 0.5:
-                # print('fliped ...')
-                P1_img = P1_img.transpose(Image.FLIP_LEFT_RIGHT)
-                P2_img = P2_img.transpose(Image.FLIP_LEFT_RIGHT)
+                if flip_random > 0.5:
+                    # print('fliped ...')
+                    P1_img = P1_img.transpose(Image.FLIP_LEFT_RIGHT)
+                    P2_img = P2_img.transpose(Image.FLIP_LEFT_RIGHT)
 
-                BP1_img = np.array(BP1_img[:, ::-1, :])  # flip
-                BP2_img = np.array(BP2_img[:, ::-1, :])  # flip
+                    BP1_img = np.array(BP1_img[:, ::-1, :])  # flip
+                    BP2_img = np.array(BP2_img[:, ::-1, :])  # flip
 
             BP1 = torch.from_numpy(BP1_img).float()  # h, w, c
             BP1 = BP1.transpose(2, 0)  # c,w,h
@@ -100,8 +100,8 @@ class KeyFUNITDataset(BaseDataset):
 
             P1 = self.transform(P1_img)
             P2 = self.transform(P2_img)
-            Ys = None
-
+            return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
+                'P1_path': P1_name, 'P2_path': P2_name, 'label': label}
         else:
             BP1 = torch.from_numpy(BP1_img).float()  # h, w, c
             BP1 = BP1.transpose(2, 0)  # c,w,h
@@ -115,11 +115,13 @@ class KeyFUNITDataset(BaseDataset):
             P2 = self.transform(P2_img)
 
             # funit bundle (Notation following FUNIT paper)
+            # FIXME: Ys has different size in dimension 0, need further guidance...
             Ys = np.load(os.path.join(self.dir_C, class_name + '.npy'))
-
-        return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
+            # Ys = Ys[:k]
+            return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
                 'P1_path': P1_name, 'P2_path': P2_name, 'Ys': Ys,
                 'label': label}
+        
 
     def __len__(self):
         return self.size

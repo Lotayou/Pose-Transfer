@@ -47,15 +47,17 @@ class FUNITModel(nn.Module):
             l_total = (hp['gan_w'] * l_adv + hp['r_w'] * l_x_rec + hp[
                 'fm_w'] * (l_c_rec + l_m_rec))
             l_total.backward()
+            
             loss_dict = {
-                'l_total': l_total.item(),
-                'l_adv': l_adv.item(),
-                'l_x_rec': l_x_rec.item(),
-                'l_c_rec': l_c_rec.item(),
-                'l_m_rec': l_m_rec.item(),
-                'gen_acc': acc.item(),
+                'l_total': l_total.detach(),
+                'l_adv': l_adv.detach(),
+                'l_x_rec': l_x_rec.detach(),
+                'l_c_rec': l_c_rec.detach(),
+                'l_m_rec': l_m_rec.detach(),
+                'gen_acc': acc.detach(),
             }
             return xt, loss_dict
+            
         elif mode == 'dis_update':
             xb.requires_grad_()
             l_real_pre, acc_r, resp_r = self.dis.calc_dis_real_loss(xb, lb)
@@ -74,7 +76,7 @@ class FUNITModel(nn.Module):
             l_fake.backward()
             l_total = l_fake + l_real + l_reg
             acc = 0.5 * (acc_f + acc_r)
-            return xt, l_total, l_fake_p, l_real_pre, l_reg_pre, acc
+            #return xt, l_total, l_fake_p, l_real_pre, l_reg_pre, acc
         else:
             assert 0, 'Not support operation'
 

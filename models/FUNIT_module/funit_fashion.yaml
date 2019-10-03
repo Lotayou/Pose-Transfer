@@ -26,7 +26,7 @@ gen:
 dis:
   nf: 64                      # base number of filters
   n_res_blks: 10              # number of residual blocks in the discriminator
-  num_classes: 119            # number of classes in the training set
+  num_classes: 12028          # number of classes in the training set
 
 # data options
 num_workers: 4

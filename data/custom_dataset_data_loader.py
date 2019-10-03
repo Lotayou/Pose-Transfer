@@ -8,9 +8,9 @@ def CreateDataset(opt):
     if opt.dataset_mode == 'keypoint':
         from data.keypoint import KeyDataset
         dataset = KeyDataset()
-	elif opt.dataset_mode == 'keypoint_funit':
-		from data.keypoint_funit import KeyFUNITDataset
-		dataset = KeyFUNITDataset()
+    elif opt.dataset_mode == 'keypoint_funit':
+        from data.keypoint_funit import KeyFUNITDataset
+        dataset = KeyFUNITDataset()
 
     else:
         raise ValueError("Dataset [%s] not recognized." % opt.dataset_mode)

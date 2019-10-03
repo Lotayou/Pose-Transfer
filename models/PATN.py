@@ -111,6 +111,7 @@ class TransferModel(BaseModel):
         G_input = [self.input_P1,
                    torch.cat((self.input_BP1, self.input_BP2), 1)]
         self.fake_p2 = self.netG(G_input)
+        return self.fake_p2
 
 
     def test(self):
@@ -118,7 +119,7 @@ class TransferModel(BaseModel):
             G_input = [self.input_P1,
                        torch.cat((self.input_BP1, self.input_BP2), 1)]
             self.fake_p2 = self.netG(G_input)
-
+        return self.fake_p2
 
     # get image paths
     def get_image_paths(self):

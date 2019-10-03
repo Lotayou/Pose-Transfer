@@ -4,25 +4,17 @@ from data.data_loader import CreateDataLoader
 from models.models import create_model
 from skimage.io import imsave
 
-opt = TrainOptions().parse()
+from torch import autograd 
+autograd.set_detect_anomaly(True)
+
+opt = TrainOptions().parse(
+	#use_debug_mode=True  # debug
+    use_debug_mode=False
+)
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
 dataset_size = len(data_loader)
 print(('#training images = %d' % dataset_size))
-
-# debug
-debug = True
-
-if debug:
-    opt.niter = 2
-    opt.niter_decay = 2
-    opt.batchSize = 2
-    opt.max_dataset_size = 20
-    opt.print_freq = 1
-    opt.save_latest_freq = 2
-    opt.save_epoch_freq = 2
-    opt.name = 'debug'
-
 
 model = create_model(opt)
 total_steps = 0
@@ -42,7 +34,7 @@ for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
             im_npy = model.get_current_visuals()
             im_name = '%s/images/%03d_%05d.png' % (model.save_dir, epoch, i)
             imsave(im_name, im_npy)
-            print(model.get_error_log())
+            print(model.get_error_log(i))
 
         if total_steps % opt.save_latest_freq == 0:
             print(('saving the latest model (epoch %d, total_steps %d)' %

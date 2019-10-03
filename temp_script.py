@@ -40,6 +40,6 @@ if __name__ == '__main__':
     print('train_no: %d, test_no: %d' % (train_class_no, test_class_no))
     with open('./fashion_data/train_classes.pickle', 'wb') as ftrain:
         pickle.dump(train_labels, ftrain)
-    with open('./fashion_data/test_classes.pickle', 'wb') as ftrain:
-        pickle.dump(train_labels, ftest)
+    with open('./fashion_data/test_classes.pickle', 'wb') as ftest:
+        pickle.dump(test_labels, ftest)
 

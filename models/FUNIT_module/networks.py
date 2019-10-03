@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from torch import autograd
 
-from blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
+from .blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
 
 
 def assign_adain_params(adain_params, model):

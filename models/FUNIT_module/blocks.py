@@ -89,9 +89,16 @@ class LinearBlock(nn.Module):
 
         # initialize activation
         if activation == 'relu':
-            self.activation = nn.ReLU(inplace=True)
+            ''' 20191003: C(yka)ritical B(lyat)ug
+            # Setting 'inplace=True' leading to the following error
+            # # RuntimeError: one of the variables needed for gradient computation has been modified by an inplace operation: [torch.cuda.FloatTensor [1, 512, 32, 22]], which is output 0 of ConstantPadNdBackward, is at version 1;
+            # x is modified in-place...
+            '''
+            #self.activation = nn.ReLU(inplace=True)
+            self.activation = nn.ReLU(inplace=False)
         elif activation == 'lrelu':
-            self.activation = nn.LeakyReLU(0.2, inplace=True)
+            #self.activation = nn.LeakyReLU(0.2, inplace=True)
+            self.activation = nn.LeakyReLU(0.2, inplace=False)
         elif activation == 'tanh':
             self.activation = nn.Tanh()
         elif activation == 'none':
@@ -140,9 +147,16 @@ class Conv2dBlock(nn.Module):
 
         # initialize activation
         if activation == 'relu':
-            self.activation = nn.ReLU(inplace=True)
+            ''' 20191003: C(yka)ritical B(lyat)ug
+            # Setting 'inplace=True' leading to the following error
+            # # RuntimeError: one of the variables needed for gradient computation has been modified by an inplace operation: [torch.cuda.FloatTensor [1, 512, 32, 22]], which is output 0 of ConstantPadNdBackward, is at version 1;
+            # x is modified in-place...
+            '''
+            #self.activation = nn.ReLU(inplace=True)
+            self.activation = nn.ReLU(inplace=False)
         elif activation == 'lrelu':
-            self.activation = nn.LeakyReLU(0.2, inplace=True)
+            #self.activation = nn.LeakyReLU(0.2, inplace=True)
+            self.activation = nn.LeakyReLU(0.2, inplace=False)
         elif activation == 'tanh':
             self.activation = nn.Tanh()
         elif activation == 'none':
