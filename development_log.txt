@@ -24,6 +24,26 @@
 
 # Start training
 
+20191004:
+# Unexpected error occured at 0734:
+    # /opt/conda/conda-bld/pytorch_1565272279342/work/aten/src/ATen/native/cuda/IndexKernel.cu:60: lambda [](int)->auto::operator()(int)->auto: block: [4,0,0], thread: [117,0,0] Assertion `index >= -sizes[i] && index < sizes[i] && "index out of bounds"` failed.
+    # File "/backup1/lingboyang/human_image_generation/CVPR2019_pose_transfer/models/FUNIT_module/funit_model.py", line 63, in forward
+        l_real_pre, acc_r, resp_r = self.dis.calc_dis_real_loss(xb, lb)
+      File "/backup1/lingboyang/human_image_generation/CVPR2019_pose_transfer/models/FUNIT_module/networks.py", line 81, in calc_dis_real_loss
+        resp_real, gan_feat = self.forward(input_real, input_label)
+      File "/backup1/lingboyang/human_image_generation/CVPR2019_pose_transfer/models/FUNIT_module/networks.py", line 68, in forward
+        out = out[index, y, :, :]
+        
+    # Solution: Add `drop_last=True` in dataloader. Make sure each batch is of the same size!
+
+# The code runs too slow!
+    # 4.5s per batch, 12 h per epoch... Unacceptable.
+    # Reduce I/O cost:
+        # Disable random sample for indexing... Shuffling will do.
+        # Change jpeg loader from PIL.Image to jpeg4py
+    # Use random partial subsets
+        # Limit to 4000 pairs per epoch.
+
 Work to do:
 # Implementing testing script.
     # Dealing with Ys bundle, align dimension 0. (k=3?)

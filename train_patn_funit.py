@@ -34,7 +34,7 @@ for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
             im_npy = model.get_current_visuals()
             im_name = '%s/images/%03d_%05d.png' % (model.save_dir, epoch, i)
             imsave(im_name, im_npy)
-            print(model.get_error_log(i))
+            print(model.get_error_log(epoch_iter))
 
         if total_steps % opt.save_latest_freq == 0:
             print(('saving the latest model (epoch %d, total_steps %d)' %

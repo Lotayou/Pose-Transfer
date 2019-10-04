@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import torch
 import pickle
+from jpeg4py import JPEG
 
 
 def make_person_classes(dir_P, dir_C):
@@ -58,9 +59,12 @@ class KeyFUNITDataset(BaseDataset):
         print('Loading data pairs finished ...')
 
     def __getitem__(self, index):
-        if self.opt.phase == 'train':
-            index = random.randint(0, self.size - 1)
-
+        # WTF?
+        # if self.opt.phase == 'train':
+        #     index = random.randint(0, self.size - 1)
+        
+        # 20191004 Use jpeg4py to replace PIL
+        
         P1_name, P2_name = self.pairs[index]
         # 20190930: Add labels for FUNIT
         class_name = P1_name[:P1_name.rfind('_')]
@@ -71,11 +75,22 @@ class KeyFUNITDataset(BaseDataset):
         P2_path = os.path.join(self.dir_P, P2_name)  # person 2
         BP2_path = os.path.join(self.dir_K, P2_name + '.npy')  # bone of person 2
 
-        P1_img = Image.open(P1_path).convert('RGB')
-        P2_img = Image.open(P2_path).convert('RGB')
+        #P1_img = Image.open(P1_path).convert('RGB')
+        #P2_img = Image.open(P2_path).convert('RGB')
+        P1_img = JPEG(P1_path).decode().transpose(2,0,1)
+        P2_img = JPEG(P2_path).decode().transpose(2,0,1)
+        P1 = torch.from_numpy(P1_img).float() / 127.5 - 1
+        P2 = torch.from_numpy(P2_img).float() / 127.5 - 1
 
         BP1_img = np.load(BP1_path)  # h, w, c
         BP2_img = np.load(BP2_path)
+        BP1 = torch.from_numpy(BP1_img).float()  # h, w, c
+        BP1 = BP1.transpose(2, 0)  # c,w,h
+        BP1 = BP1.transpose(2, 1)  # c,h,w
+
+        BP2 = torch.from_numpy(BP2_img).float()
+        BP2 = BP2.transpose(2, 0)  # c,w,h
+        BP2 = BP2.transpose(2, 1)  # c,h,w
 
         # use flip
         if self.opt.phase == 'train':
@@ -84,36 +99,18 @@ class KeyFUNITDataset(BaseDataset):
 
                 if flip_random > 0.5:
                     # print('fliped ...')
-                    P1_img = P1_img.transpose(Image.FLIP_LEFT_RIGHT)
-                    P2_img = P2_img.transpose(Image.FLIP_LEFT_RIGHT)
+                    #P1_img = P1_img.transpose(Image.FLIP_LEFT_RIGHT)
+                    #P2_img = P2_img.transpose(Image.FLIP_LEFT_RIGHT)
+                    P1_img = P1_img[:,:,::-1]
+                    P2_img = P2_img[:,:,::-1]
 
                     BP1_img = np.array(BP1_img[:, ::-1, :])  # flip
                     BP2_img = np.array(BP2_img[:, ::-1, :])  # flip
 
-            BP1 = torch.from_numpy(BP1_img).float()  # h, w, c
-            BP1 = BP1.transpose(2, 0)  # c,w,h
-            BP1 = BP1.transpose(2, 1)  # c,h,w
-
-            BP2 = torch.from_numpy(BP2_img).float()
-            BP2 = BP2.transpose(2, 0)  # c,w,h
-            BP2 = BP2.transpose(2, 1)  # c,h,w
-
-            P1 = self.transform(P1_img)
-            P2 = self.transform(P2_img)
             return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
                 'P1_path': P1_name, 'P2_path': P2_name, 'label': label}
         else:
-            BP1 = torch.from_numpy(BP1_img).float()  # h, w, c
-            BP1 = BP1.transpose(2, 0)  # c,w,h
-            BP1 = BP1.transpose(2, 1)  # c,h,w
-
-            BP2 = torch.from_numpy(BP2_img).float()
-            BP2 = BP2.transpose(2, 0)  # c,w,h
-            BP2 = BP2.transpose(2, 1)  # c,h,w
-
-            P1 = self.transform(P1_img)
-            P2 = self.transform(P2_img)
-
+            
             # funit bundle (Notation following FUNIT paper)
             # FIXME: Ys has different size in dimension 0, need further guidance...
             Ys = np.load(os.path.join(self.dir_C, class_name + '.npy'))
@@ -133,3 +130,4 @@ class KeyFUNITDataset(BaseDataset):
 if __name__ == '__main__':
     make_person_classes('../fashion_data/train')
     make_person_classes('../fashion_data/test')
+
