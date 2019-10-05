@@ -45,15 +45,17 @@ class PatnFunitModel(BaseModel):
             self.funit_opt = yaml.load(fin, Loader=yaml.FullLoader)
         
         # load checkpoints        
-        self.funit_model = FUNITModel(self.funit_opt)
+        self.funit_model = FUNITModel(self.funit_opt, opt.gpu_ids)
         if not self.isTrain or opt.continue_train:
             which_epoch = opt.which_epoch
             self.load_network(self.funit_model.gen_test, 'net_G_test(funit)', which_epoch)
             self.load_network(self.funit_model.gen, 'net_G(funit)', which_epoch)
+            self.load_network(self.funit_model.dis, 'net_D(funit)', which_epoch)
 
         # set optimizers
         if self.isTrain:
             funit_gen_params = list(self.funit_model.gen.parameters())
+            funit_dis_params = list(self.funit_model.dis.parameters())
             # 20191004: Let's play with RAdam (LOL)
             '''
             self.funit_gen_opt = torch.optim.RMSprop(
@@ -66,16 +68,24 @@ class PatnFunitModel(BaseModel):
                 lr=self.funit_opt['lr_gen'], betas=(0.5, 0.999),
                 weight_decay=self.funit_opt['weight_decay']
             )
+            self.funit_dis_opt = RAdam(
+                [p for p in funit_dis_params if p.requires_grad],
+                lr=self.funit_opt['lr_dis'], betas=(0.5, 0.999),
+                weight_decay=self.funit_opt['weight_decay']
+            )
             # 20191003: Use patn scheduler options to guide funit, since we fix patn for now.
             self.funit_gen_scheduler = networks.get_scheduler(self.funit_gen_opt, self.opt)
+            self.funit_dis_scheduler = networks.get_scheduler(self.funit_dis_opt, self.opt)
 
             # NOTE: We only attach scheduler to funit modules for now.
             self.schedulers = [
                 self.funit_gen_scheduler,
+                self.funit_dis_scheduler,
             ]
             if opt.continue_train:
                 which_epoch = opt.which_epoch
                 self.load_network(self.funit_gen_scheduler, 'net_G_scheduler(funit)', which_epoch)
+                self.load_network(self.funit_gen_scheduler, 'net_D_scheduler(funit)', which_epoch)
 
             self.fix_patn = True
             
@@ -83,7 +93,7 @@ class PatnFunitModel(BaseModel):
         print('---------- Networks initialized -------------')
         networks.print_network(self.patn_model.netG)
         networks.print_network(self.funit_model.gen)
-        networks.print_network(self.funit_model.gen_test)
+        networks.print_network(self.funit_model.dis)
         print('-----------------------------------------------')
         
         self.patn_model.netG.cuda()
@@ -93,6 +103,7 @@ class PatnFunitModel(BaseModel):
         
         if len(self.opt.gpu_ids) > 1:
             # only use net_G for now will suffice
+            # patn_model.netG dataparallel inside forward
             # note: it seems okay to wrap the whole model as a DataParallel object, but the internal mechanics is unknown...
             self.funit_model = torch.nn.DataParallel(self.funit_model, device_ids=self.opt.gpu_ids)
             
@@ -141,13 +152,20 @@ class PatnFunitModel(BaseModel):
                    torch.cat((self.input_BP1, self.input_BP2), 1)]
             self.stage_I_output = self.patn_model.netG(G_input) 
         
+        # Stage II: FUNIT discriminator update
+        self.funit_dis_opt.zero_grad()
+        self.funit_dis_loss = self.funit_model(
+            self.stage_I_output, self.input_P1, self.input_P2, self.funit_opt, 'dis'
+        )
+        self.funit_dis_opt.step()
+        
         # FUNIT (and PATN) generator update
         self.funit_gen_opt.zero_grad()
         if not self.fix_patn:
             self.patn_model.optimizer_G.zero_grad()
         # 20191005 use strong reference (ground truth P2)
         self.stage_II_output, self.loss_dict = self.funit_model(
-            self.stage_I_output, self.input_P1, self.input_P2, self.funit_opt
+            self.stage_I_output, self.input_P1, self.input_P2, self.funit_opt, 'gen'
         )
         self.funit_gen_opt.step()
         this_model = self.funit_model.module if len(self.opt.gpu_ids) > 1 else self.funit_model
@@ -175,7 +193,7 @@ class PatnFunitModel(BaseModel):
         return visual_tensor
         
     def get_error_log(self, iter_num):
-        log = '[Iter %d] ' % iter_num
+        log = '[Iter %d]: l_dis: %.4f, ' % (iter_num, torch.sum(self.dis_loss).item() / self.opt.batchSize)
         for k, v in self.loss_dict.items():
             log += '%s: %.4f, ' % (k, torch.sum(v).item() / self.opt.batchSize)
         return log
@@ -191,8 +209,10 @@ class PatnFunitModel(BaseModel):
         # funit
         f_model = self.funit_model.module if len(self.opt.gpu_ids) > 1 else self.funit_model
         self.save_network(f_model.gen, 'net_G(funit)', label, self.gpu_ids)
+        self.save_network(f_model.dis, 'net_D(funit)', label, self.gpu_ids)
         self.save_network(f_model.gen_test, 'net_G_test(funit)', label, self.gpu_ids)
         self.save_network(self.funit_gen_scheduler, 'net_G_scheduler(funit)', label, self.gpu_ids)
+        self.save_network(self.funit_dis_scheduler, 'net_D_scheduler(funit)', label, self.gpu_ids)
 
     def activating_patn(self):
         self.fix_patn = False
