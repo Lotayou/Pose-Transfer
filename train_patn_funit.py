@@ -3,9 +3,10 @@ from options.train_funit_options import TrainOptions
 from data.data_loader import CreateDataLoader
 from models.models import create_model
 from skimage.io import imsave
-
-from torch import autograd 
-autograd.set_detect_anomaly(True)
+	
+from torch.backends import cudnn
+cudnn.enabled = True
+cudnn.benchmark = True
 
 opt = TrainOptions().parse(
 	#use_debug_mode=True  # debug
@@ -32,9 +33,9 @@ for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
 
         if total_steps % opt.print_freq == 0:
             im_npy = model.get_current_visuals()
-            im_name = '%s/images/%03d_%05d.png' % (model.save_dir, epoch, i)
+            im_name = '%s/images/%03d_%06d.png' % (model.save_dir, epoch, i)
             imsave(im_name, im_npy)
-            print(model.get_error_log(epoch_iter))
+            print(model.get_error_log(total_steps))
 
         if total_steps % opt.save_latest_freq == 0:
             print(('saving the latest model (epoch %d, total_steps %d)' %

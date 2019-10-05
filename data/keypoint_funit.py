@@ -68,6 +68,7 @@ class KeyFUNITDataset(BaseDataset):
         P1_name, P2_name = self.pairs[index]
         # 20190930: Add labels for FUNIT
         class_name = P1_name[:P1_name.rfind('_')]
+        
         label = torch.tensor([self.labels[class_name]], dtype=torch.float)
 
         P1_path = os.path.join(self.dir_P, P1_name)  # person 1
