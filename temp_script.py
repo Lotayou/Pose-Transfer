@@ -71,13 +71,13 @@ def test_speed():
     print(torch.max(torch.abs(jpeg4py_torch - PIL_torch)))
 
 if __name__ == '__main__':
-    '''
-    train_labels, train_class_no = make_person_classes('./fashion_data/train')
+    
+    #train_labels, train_class_no = make_person_classes('./fashion_data/train')
+    #with open('./fashion_data/train_classes.pickle', 'wb') as ftrain:
+    #    pickle.dump(train_labels, ftrain)
+    
     test_labels, test_class_no = make_person_classes('./fashion_data/test')
-    print('train_no: %d, test_no: %d' % (train_class_no, test_class_no))
-    with open('./fashion_data/train_classes.pickle', 'wb') as ftrain:
-        pickle.dump(train_labels, ftrain)
     with open('./fashion_data/test_classes.pickle', 'wb') as ftest:
         pickle.dump(test_labels, ftest)
-    '''
-    test_speed()
+    #print('train_no: %d, test_no: %d' % (train_class_no, test_class_no))
+    #test_speed()

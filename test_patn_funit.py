@@ -1,13 +1,28 @@
-import time
+from tqdm import tqdm
 import os
-from options.test_options import TestOptions
+import numpy as np
+from options.test_funit_options import TestOptions
 from data.data_loader import CreateDataLoader
 from models.models import create_model
-from util.visualizer import Visualizer
-from util import html
-from tqdm import tqdm
+from skimage.io import imsave
+from skimage.measure import compare_ssim
+	
+from torch.backends import cudnn
+cudnn.enabled = True
+cudnn.benchmark = True
 
-opt = TestOptions().parse()
+def padding(x):
+    _h, _w, _c = x.shape
+    _im = (np.ones((_h, _h, _c)) * 255).astype(np.uint8)
+    _left = (_h - _w) // 2
+    _im[:, _left: _left + _w, :] = x
+    return _im
+    
+
+opt = TestOptions().parse(
+	#use_debug_mode=True  # debug
+    use_debug_mode=False
+)
 opt.nThreads = 1   # test code only supports nThreads = 1
 opt.batchSize = 1  # test code only supports batchSize = 1
 opt.serial_batches = True  # no shuffle
@@ -15,35 +30,39 @@ opt.no_flip = True  # no flip
 
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
+dataset_size = len(data_loader)
+print(('#testing images = %d' % dataset_size))
+
+testing_dir = os.path.join(opt.results_dir, opt.name)
+if not os.path.isdir(testing_dir):
+    os.makedirs(testing_dir)
+
 model = create_model(opt)
-visualizer = Visualizer(opt)
-# create website
-web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
-
-webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.which_epoch))
-
-print((opt.how_many))
-print((len(dataset)))
-
 model = model.eval()
-print((model.training))
-
+h, w = 256, 176
 opt.how_many = 999999
-# test
-for data in tqdm(dataset):
+ssim_sum = 0
+no = 0
+
+file = open(os.path.join(opt.results_dir, opt.name+'.txt'), 'w')
+
+for data in dataset:
     model.set_input(data)
-    #startTime = time.time()
     model.test()
-    #endTime = time.time()
-    #print(endTime-startTime)
-    visuals = model.get_current_visuals()
-    img_path = model.get_image_paths()
-    img_path = [img_path]
-    #print(img_path)
-    visualizer.save_images(webpage, visuals, img_path)
-
-webpage.save()
-
-
-
-
+    test_img = model.get_current_visuals()
+    imsave(os.path.join(testing_dir, '%6d.png' % no), test_img)
+    no += 1
+    
+    gt = padding(test_img[h:,:w])
+    gen = padding(test_img[h:,2*w:])
+    ssim_score = compare_ssim(gt, gen, gaussian_weights=True, sigma=1.5,
+        use_sample_covariance=False, multichannel=True,
+        data_range=gen.max() - gen.min()
+    )
+    file.write('%.6f\n' % ssim_score)
+    ssim_sum += ssim_score
+    
+file.write('Mean SSIM = %.6f\n' % ssim_sum / no)
+file.close()
+    
+    

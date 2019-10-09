@@ -114,10 +114,11 @@ class KeyFUNITDataset(BaseDataset):
             
             # funit bundle (Notation following FUNIT paper)
             # FIXME: Ys has different size in dimension 0, need further guidance...
-            Ys = np.load(os.path.join(self.dir_C, class_name + '.npy'))
+            # Ys = np.load(os.path.join(self.dir_C, class_name + '.npy'))
             # Ys = Ys[:k]
             return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
-                'P1_path': P1_name, 'P2_path': P2_name, 'Ys': Ys,
+                'P1_path': P1_name, 'P2_path': P2_name, 
+                # 'Ys': Ys,
                 'label': label}
         
 

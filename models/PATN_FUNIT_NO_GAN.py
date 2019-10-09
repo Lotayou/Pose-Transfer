@@ -99,7 +99,10 @@ class PatnFunitModel(BaseModel):
         self.patn_model.netG.cuda()
         self.funit_model.cuda()
         self.patn_model.netG.eval()  # Cool:)
-        self.funit_model.train()
+        if self.opt.isTrain:
+            self.funit_model.train()
+        else:
+            self.funit_model.eval()
         
         if len(self.opt.gpu_ids) > 1:
             # only use net_G for now will suffice
@@ -174,6 +177,15 @@ class PatnFunitModel(BaseModel):
             self.patn_model.optimizer_G.step()
 
         torch.cuda.synchronize()
+    
+    def test(self):
+        with torch.no_grad():
+            G_input = [self.input_P1,
+                   torch.cat((self.input_BP1, self.input_BP2), 1)]
+            self.stage_I_output = self.patn_model.netG(G_input) 
+            self.stage_II_output = self.funit_model.test(
+                self.stage_I_output, self.input_P1
+            )
 
     def get_current_visuals(self):
         # 2 by 3:
@@ -193,7 +205,8 @@ class PatnFunitModel(BaseModel):
         return visual_tensor
         
     def get_error_log(self, iter_num):
-        log = '[Iter %d]: l_dis: %.4f, ' % (iter_num, torch.sum(self.dis_loss).item() / self.opt.batchSize)
+        log = '[Iter %d]: l_dis: %.4f, ' % (iter_num, 
+            torch.sum(self.funit_dis_loss).item() / self.opt.batchSize)
         for k, v in self.loss_dict.items():
             log += '%s: %.4f, ' % (k, torch.sum(v).item() / self.opt.batchSize)
         return log

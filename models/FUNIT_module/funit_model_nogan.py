@@ -57,7 +57,7 @@ class FUNITModel(nn.Module):
                 'l_total': l_total.detach(),
                 'l_recon': l_recon.detach(),
                 'l_percp': l_perceptual.detach(),
-                'l_gan': l_gan
+                'l_gan': l_gan.detach(),
             }
             return out_b, loss_dict
         elif mode == 'dis':
@@ -74,24 +74,15 @@ class FUNITModel(nn.Module):
         else:
             assert 0, 'Mode dis or gen only'
     
-    def test(self, co_data, cl_data):
+    def test(self, fake_b, real_a):
         self.eval()
         self.gen.eval()
         self.gen_test.eval()
-        xa = co_data[0].cuda()
-        xb = cl_data[0].cuda()
-        c_xa_current = self.gen.enc_content(xa)
-        s_xa_current = self.gen.enc_class_model(xa)
-        s_xb_current = self.gen.enc_class_model(xb)
-        xt_current = self.gen.decode(c_xa_current, s_xb_current)
-        xr_current = self.gen.decode(c_xa_current, s_xa_current)
-        c_xa = self.gen_test.enc_content(xa)
-        s_xa = self.gen_test.enc_class_model(xa)
-        s_xb = self.gen_test.enc_class_model(xb)
-        xt = self.gen_test.decode(c_xa, s_xb)
-        xr = self.gen_test.decode(c_xa, s_xa)
-        self.train()
-        return xa, xr_current, xt_current, xb, xr, xt
+        co_b = self.gen.enc_content(fake_b)
+        s_b = self.gen.enc_class_model(fake_b)
+        
+        out_b = self.gen.decode(co_b, s_b)  # translation
+        return out_b
 
     def translate_k_shot(self, co_data, cl_data, k):
         self.eval()
