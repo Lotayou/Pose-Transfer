@@ -15,6 +15,10 @@ def create_model(opt):
         assert opt.dataset_mode == 'keypoint_funit'
         from .PATN_FUNIT_NO_GAN import PatnFunitModel
         model = PatnFunitModel()
+    elif opt.model == 'PATN_FUNIT_DEBUG':
+        assert opt.dataset_mode == 'keypoint_funit'
+        from .PATN_FUNIT_DEBUG import PatnFunitModel
+        model = PatnFunitModel()
     else:
         raise ValueError("Model [%s] not recognized." % opt.model)
 

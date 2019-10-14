@@ -157,9 +157,10 @@ class PatnFunitModel(BaseModel):
         bundle_content = [self.stage_I_output, self.input_label]
         bundle_class = [self.input_P1, self.input_label]  # mode A
 
-        # stage II: FUNIT discriminator update        
+        # stage II: FUNIT discriminator update
+        # 20191007: Try multiple batch update, just to see if discriminator is fully capable.
         self.funit_dis_opt.zero_grad()
-        self.funit_model(bundle_content, bundle_class, self.funit_opt, 'dis_update')
+        self.dis_loss_dict = self.funit_model(bundle_content, bundle_class, self.funit_opt, 'dis_update')
         self.funit_dis_opt.step()
 
         # FUNIT (and PATN) generator update
@@ -170,7 +171,7 @@ class PatnFunitModel(BaseModel):
         if not self.opt.fix_patn:
             self.patn_gen_opt.zero_grad()
         '''
-        self.stage_II_output, self.loss_dict = self.funit_model(bundle_content, bundle_class, self.funit_opt, 'gen_update')
+        self.stage_II_output, self.gen_loss_dict = self.funit_model(bundle_content, bundle_class, self.funit_opt, 'gen_update')
         self.funit_gen_opt.step()
         this_model = self.funit_model.module if len(self.opt.gpu_ids) > 1 else self.funit_model
         update_average(this_model.gen_test, this_model.gen)
@@ -198,8 +199,11 @@ class PatnFunitModel(BaseModel):
         return visual_tensor
         
     def get_error_log(self, iter_num):
-        log = 'Iter %d' % iter_num
-        for k, v in self.loss_dict.items():
+        log = 'Iter %d:\n\t Dis loss: ' % iter_num
+        for k, v in self.dis_loss_dict.items():
+            log += '%s: %.4f, ' % (k, torch.sum(v).item() / self.opt.batchSize)
+        log += '\n\t Gen loss: '
+        for k, v in self.gen_loss_dict.items():
             log += '%s: %.4f, ' % (k, torch.sum(v).item() / self.opt.batchSize)
         return log
         
@@ -212,7 +216,7 @@ class PatnFunitModel(BaseModel):
             if self.opt.with_D_PP:
                 self.save_network(self.patn_model.netD_PP, 'netD_PP(patn)', label, self.gpu_ids)
         # funit
-        f_model = this_model = self.funit_model.module if len(self.opt.gpu_ids) > 1 else self.funit_model
+        f_model = self.funit_model.module if len(self.opt.gpu_ids) > 1 else self.funit_model
         self.save_network(f_model.gen, 'net_G(funit)', label, self.gpu_ids)
         self.save_network(f_model.gen_test, 'net_G_test(funit)', label, self.gpu_ids)
         self.save_network(f_model.dis, 'net_D(funit)', label, self.gpu_ids)

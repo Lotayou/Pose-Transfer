@@ -12,7 +12,6 @@ import sys
 import torch
 
 from .PATN import TransferModel
-from .FUNIT_module.funit_model_nogan import FUNITModel
 from .radam import RAdam
 
 def recon_criterion(predict, target):
@@ -37,20 +36,26 @@ class PatnFunitModel(BaseModel):
         self.patn_model.initialize(opt)        
         # force loading
         pretrained_patn_dir = './checkpoints/pretrained_patn_fashion/latest_net_netG.pth'
+        funit_opt_dir = './models/FUNIT_module/funit_fashion.yaml'
         copyfile(pretrained_patn_dir, 
             os.path.join(self.save_dir, 'latest_net_netG.pth'))
+        copyfile(funit_opt_dir,
+            os.path.join(self.save_dir, 'funit_options.yaml'))
         self.load_network(self.patn_model.netG, 'netG', 'latest')
         
         with open(opt.funit_options, 'r') as fin:
             self.funit_opt = yaml.load(fin, Loader=yaml.FullLoader)
         
         # load checkpoints        
+        if opt.use_global_res:
+            from .FUNIT_module.funit_model_global_res import FUNITModel
+        else:
+            from .FUNIT_module.funit_model_nogan import FUNITModel
         self.funit_model = FUNITModel(self.funit_opt, opt.gpu_ids)
         if not self.isTrain or opt.continue_train:
             which_epoch = opt.which_epoch
             self.load_network(self.funit_model.gen_test, 'net_G_test(funit)', which_epoch)
             self.load_network(self.funit_model.gen, 'net_G(funit)', which_epoch)
-            self.load_network(self.funit_model.dis, 'net_D(funit)', which_epoch)
 
         # set optimizers
         if self.isTrain:
@@ -167,12 +172,16 @@ class PatnFunitModel(BaseModel):
         if not self.fix_patn:
             self.patn_model.optimizer_G.zero_grad()
         # 20191005 use strong reference (ground truth P2)
+        #self.residual, 
         self.stage_II_output, self.loss_dict = self.funit_model(
             self.stage_I_output, self.input_P1, self.input_P2, self.funit_opt, 'gen'
         )
         self.funit_gen_opt.step()
-        this_model = self.funit_model.module if len(self.opt.gpu_ids) > 1 else self.funit_model
-        update_average(this_model.gen_test, this_model.gen)
+        
+        # I don't know why do they bother maintain a g_test 
+        #this_model = self.funit_model.module if len(self.opt.gpu_ids) > 1 else self.funit_model
+        #update_average(this_model.gen_test, this_model.gen)
+        
         if not self.fix_patn:
             self.patn_model.optimizer_G.step()
 
@@ -183,6 +192,7 @@ class PatnFunitModel(BaseModel):
             G_input = [self.input_P1,
                    torch.cat((self.input_BP1, self.input_BP2), 1)]
             self.stage_I_output = self.patn_model.netG(G_input) 
+            #self.residual, 
             self.stage_II_output = self.funit_model.test(
                 self.stage_I_output, self.input_P1
             )
@@ -198,9 +208,14 @@ class PatnFunitModel(BaseModel):
         BP1 = util.draw_pose_from_map(self.input_BP1.data)[0]
         BP2 = util.draw_pose_from_map(self.input_BP2.data)[0]
         
+        if self.opt.use_global_res:
+            r = util.tensor2im(self.residual.data)
+        else:
+            r = BP2
+        
         visual_tensor = np.concatenate((
             np.concatenate((P1, BP1, O1), axis=1),
-            np.concatenate((P2, BP2, O2), axis=1),
+            np.concatenate((P2, r, O2), axis=1),
         ), axis=0)
         return visual_tensor
         
