@@ -4,6 +4,7 @@ market_data/*
 *.pth
 *.npy
 *.h5
+*.txt
 *.py[cod]
 *.caffemodel
 results/*

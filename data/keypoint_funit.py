@@ -41,6 +41,12 @@ class KeyFUNITDataset(BaseDataset):
 
         self.init_categories(opt.pairLst)
         self.transform = get_transform(opt)
+        
+        # LABELS = ['nose', 'neck', 'Rsho', 'Relb', 'Rwri', 'Lsho', 'Lelb', 'Lwri',
+        # 'Rhip', 'Rkne', 'Rank', 'Lhip', 'Lkne', 'Lank', 'Leye', 'Reye', 'Lear', 'Rear']
+        self.pose_swapping_index = torch.tensor([
+            0,1, 5,6,7, 2,3,4, 11,12,13, 8,9,10, 15,14, 17,16
+        ], dtype=torch.long)
 
         with open(os.path.join(opt.dataroot, opt.phase + '_classes.pickle'), 'rb') as f:
             self.labels = pickle.load(f)
@@ -107,6 +113,11 @@ class KeyFUNITDataset(BaseDataset):
 
                     BP1_img = np.array(BP1_img[:, ::-1, :])  # flip
                     BP2_img = np.array(BP2_img[:, ::-1, :])  # flip
+                    # 20191020: This is a potential bug.                     
+                    # Left-right channels should be swapped along with spatial coordinates.
+                    # BP1_img = BP1_img[self.pose_swapping_index]
+                    # BP2_img = BP2_img[self.pose_swapping_index]
+                    
 
             return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
                 'P1_path': P1_name, 'P2_path': P2_name, 'label': label}

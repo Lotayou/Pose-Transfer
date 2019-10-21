@@ -52,13 +52,30 @@ class BaseModel(nn.Module):
     def save_network(self, network, network_label, epoch_label, gpu_ids):
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
-        torch.save(network.state_dict(), save_path)
+        if isinstance(network, nn.DataParallel):
+            torch.save(network.module.state_dict(), save_path)
+        else:
+            torch.save(network.state_dict(), save_path)
 
     # helper loading function that can be used by subclasses
     def load_network(self, network, network_label, epoch_label):
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
-        network.load_state_dict(torch.load(save_path))
+        state_dict = torch.load(save_path)
+        try:
+            network.load_state_dict(state_dict)
+        except:
+            # Could be a DataParallel model, remove 'module.' prefix from all keys
+            print('Net %s could belong to a DataParallel object, manually removing key prefix...' % network_label)
+            from collections import OrderedDict
+            correct_dict = OrderedDict()
+            for k, v in state_dict.items():
+                kk = k[7:]
+                correct_dict[kk] = v
+            network.load_state_dict(correct_dict)
+        finally:
+            print('Loading successful')
+                
 
     # update learning rate (called once every epoch)
     def update_learning_rate(self):
