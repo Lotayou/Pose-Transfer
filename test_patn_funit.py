@@ -40,8 +40,8 @@ if not os.path.isdir(testing_dir):
 model = create_model(opt)
 model = model.eval()
 h, w = 256, 176
-opt.how_many = 999999
-ssim_sum = 0
+opt.how_many = 99999
+ssim_sum1, ssim_sum2 = 0, 0
 no = 0
 
 file = open(os.path.join(opt.results_dir, opt.name+'.txt'), 'w')
@@ -53,16 +53,30 @@ for data in dataset:
     imsave(os.path.join(testing_dir, '%6d.png' % no), test_img)
     no += 1
     
+    if no > opt.how_many:
+        break
+    
     gt = padding(test_img[h:,:w])
-    gen = padding(test_img[h:,2*w:])
-    ssim_score = compare_ssim(gt, gen, gaussian_weights=True, sigma=1.5,
+    gen1 = padding(test_img[:h,2*w:])
+    gen2 = padding(test_img[h:,2*w:])
+    
+    # imsave(os.path.join(testing_dir, 'gt.png'), gt)
+    # imsave(os.path.join(testing_dir, 'g1.png'), gen1)
+    # imsave(os.path.join(testing_dir, 'g2.png'), gen2)
+    
+    ssim_score1 = compare_ssim(gt, gen1, gaussian_weights=True, sigma=1.5,
         use_sample_covariance=False, multichannel=True,
-        data_range=gen.max() - gen.min()
+        data_range=gen1.max() - gen1.min()
     )
-    file.write('%.6f\n' % ssim_score)
-    ssim_sum += ssim_score
+    ssim_score2 = compare_ssim(gt, gen2, gaussian_weights=True, sigma=1.5,
+        use_sample_covariance=False, multichannel=True,
+        data_range=gen2.max() - gen2.min()
+    )
+    file.write('[%.6f / %.6f]\n' % (ssim_score1, ssim_score2))
+    file.flush()
+    ssim_sum1 += ssim_score1
+    ssim_sum2 += ssim_score2
     
-file.write('Mean SSIM = %.6f\n' % ssim_sum / no)
+file.write('Stage I: Mean SSIM = %.6f\n' % (ssim_sum1 / (no - 1)))
+file.write('Stage II: Mean SSIM = %.6f\n' % (ssim_sum2 / (no - 1)))
 file.close()
-    
-    

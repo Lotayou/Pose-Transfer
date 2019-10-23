@@ -4,12 +4,15 @@ from data.data_loader import CreateDataLoader
 from models.models import create_model
 from skimage.io import imsave
 	
+from random import seed
+seed(2333)
+    
 from torch.backends import cudnn
 cudnn.enabled = True
 cudnn.benchmark = True
 
 opt = TrainOptions().parse(
-	#use_debug_mode=True  # debug
+	# use_debug_mode=True  # debug
     use_debug_mode=False
 )
 data_loader = CreateDataLoader(opt)
