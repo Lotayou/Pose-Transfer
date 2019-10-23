@@ -14,10 +14,12 @@ from .blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
 
 def assign_adain_params(adain_params, model):
     # assign the adain_params to the AdaIN layers in model
+    #print('Assign adain params')
     for m in model.modules():
         if m.__class__.__name__ == "AdaptiveInstanceNorm2d":
             mean = adain_params[:, :m.num_features]
             std = adain_params[:, m.num_features:2*m.num_features]
+            #print('mean:', mean.shape)
             m.bias = mean.contiguous().view(-1)
             m.weight = std.contiguous().view(-1)
             if adain_params.size(1) > 2*m.num_features:
@@ -151,8 +153,9 @@ class FewShotGen(nn.Module):
 
     def forward(self, one_image, model_set):
         # reconstruct an image
-        content, model_codes = self.encode(one_image, model_set)
-        model_code = torch.mean(model_codes, dim=0).unsqueeze(0)
+        content, model_code = self.encode(one_image, model_set)
+        # 20191018: Who the fuck wrote this ?!
+        # model_code = torch.mean(model_code, dim=0).unsqueeze(0)
         images_trans = self.decode(content, model_code)
         return images_trans
 
@@ -160,15 +163,17 @@ class FewShotGen(nn.Module):
         # extract content code from the input image
         content = self.enc_content(one_image)
         # extract model code from the images in the model set
-        class_codes = self.enc_class_model(model_set)
-        class_code = torch.mean(class_codes, dim=0).unsqueeze(0)
+        class_code = self.enc_class_model(model_set)
+        # 20191018: Who the fuck wrote this ?!
+        # class_code = torch.mean(class_code, dim=0).unsqueeze(0)
         return content, class_code
 
     def decode(self, content, model_code):
         # decode content and style codes to an image
         adain_params = self.mlp(model_code)
         assign_adain_params(adain_params, self.dec)
-        images = self.dec(content)
+        # Bug input [N, 512, h//8, w//8]
+        images = self.dec(content) 
         return images
 
 

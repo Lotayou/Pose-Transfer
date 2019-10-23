@@ -38,13 +38,13 @@ class FUNITModel(nn.Module):
     def forward(self, fake_b, real_a, real_b, hp, mode):
         if mode == 'gen':
             co_b = self.gen.enc_content(fake_b)
+            co_a = self.gen.enc_content(real_a)
             s_a = self.gen.enc_class_model(real_a)
-            s_b = self.gen.enc_class_model(fake_b)
             
-            out_b = self.gen.decode(co_b, s_b)  # translation
-            out_a = self.gen.decode(co_b, s_a)  # reconstruction
+            out_b = self.gen.decode(co_b, s_a)  # translation
+            out_a = self.gen.decode(co_a, s_a)  # reconstruction
             dis_b_fake = self.dis(out_b)
-            #dis_b_fake = self.dis(self.pad_to_square(out_b))
+            # dis_b_fake = self.dis(self.pad_to_square(out_b))
            
             l_recon = self.recon_criterion(out_b, real_b) + self.recon_criterion(out_a, real_a)
             l_perceptual = self.vgg_criterion(out_b, real_b) + self.vgg_criterion(out_a, real_a)
@@ -63,8 +63,8 @@ class FUNITModel(nn.Module):
         elif mode == 'dis':
             with torch.no_grad():
                 co_b = self.gen.enc_content(fake_b)
-                s_b = self.gen.enc_class_model(fake_b)
-                out_b = self.gen.decode(co_b, s_b)  # translation
+                s_a = self.gen.enc_class_model(real_a)
+                out_b = self.gen.decode(co_b, s_a)  # translation
                 
             dis_b_fake = self.dis(out_b)
             dis_b_real = self.dis(real_b)
@@ -77,11 +77,10 @@ class FUNITModel(nn.Module):
     def test(self, fake_b, real_a):
         self.eval()
         self.gen.eval()
-        self.gen_test.eval()
         co_b = self.gen.enc_content(fake_b)
-        s_b = self.gen.enc_class_model(fake_b)
+        s_a = self.gen.enc_class_model(real_a)
         
-        out_b = self.gen.decode(co_b, s_b)  # translation
+        out_b = self.gen.decode(co_b, s_a)  # translation
         return out_b
 
     def translate_k_shot(self, co_data, cl_data, k):

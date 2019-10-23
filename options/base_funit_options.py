@@ -55,6 +55,7 @@ class BaseOptions():
         ### 20180927 Yang Lingbo
         # Add funit config
         self.parser.add_argument('--funit_options', type=str, default='./models/FUNIT_module/funit_fashion.yaml', help='configuration file for funit module')
+        self.parser.add_argument('--use_global_res', action='store_true', help='If specified, let stage II net predict the residual between ground truth and stage I output.')
         self.initialized = True
 
     ### 20191003: Add debug mode options
@@ -67,8 +68,9 @@ class BaseOptions():
         if use_debug_mode:
             self.opt.niter = 2
             self.opt.niter_decay = 2
-            self.opt.batchSize = 2
-            self.opt.max_dataset_size = 20
+            self.opt.nThreads = 4
+            self.opt.batchSize = 8
+            self.opt.max_dataset_size = 200
             self.opt.print_freq = 1
             self.opt.save_latest_freq = 2
             self.opt.save_epoch_freq = 2

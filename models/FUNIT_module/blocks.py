@@ -200,6 +200,13 @@ class AdaptiveInstanceNorm2d(nn.Module):
         running_mean = self.running_mean.repeat(b)
         running_var = self.running_var.repeat(b)
         x_reshaped = x.contiguous().view(1, b * c, *x.size()[2:])
+        
+        # print('In AdaIN2d:')
+        # print('    x_shape:', x_reshaped.shape)
+        # print('    running_mean_shape:', running_mean.shape)
+        # print('    running_var_shape:', running_var.shape)
+        # print('    weight_shape:', self.weight.shape)
+        # print('    bias_shape:', self.bias.shape)
         out = F.batch_norm(
             x_reshaped, running_mean, running_var, self.weight, self.bias,
             True, self.momentum, self.eps)

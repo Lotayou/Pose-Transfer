@@ -14,11 +14,14 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--niter', type=int, default=100, help='# of iter at starting learning rate')
         self.parser.add_argument('--niter_decay', type=int, default=100, help='# of iter to linearly decay learning rate to zero')
         self.parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')
-        self.parser.add_argument('--lr', type=float, default=0.00001, help='initial learning rate for adam')
+        self.parser.add_argument('--G1_lr', type=float, default=0.0001, help='initial learning rate for optimizer')
+        self.parser.add_argument('--G2_lr', type=float, default=0.0001, help='initial learning rate for optimizer')
+        self.parser.add_argument('--D_lr', type=float, default=0.0001, help='initial learning rate for optimizer')
+        self.parser.add_argument('--weight_decay', type=float, default=0.00001, help='initial learning rate for optimizer')
         self.parser.add_argument('--no_lsgan', action='store_true', help='do *not* use least square GAN, if false, use vanilla GAN')
-        self.parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for L1 loss')
-        self.parser.add_argument('--lambda_B', type=float, default=10.0, help='weight for perceptual L1 loss')
-        self.parser.add_argument('--lambda_GAN', type=float, default=5.0, help='weight of GAN loss')
+        self.parser.add_argument('--lambda_l1', type=float, default=10.0, help='weight for L1 loss')
+        self.parser.add_argument('--lambda_vgg', type=float, default=5.0, help='weight for perceptual L1 loss')
+        self.parser.add_argument('--lambda_gan', type=float, default=5.0, help='weight of GAN loss')
 
         self.parser.add_argument('--pool_size', type=int, default=50, help='the size of image buffer that stores previously generated images')
         self.parser.add_argument('--lr_policy', type=str, default='lambda', help='learning rate policy: lambda|step|plateau')
@@ -31,3 +34,9 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--DG_ratio', type=int, default=1, help='how many times for D training after training G once')
 
         self.isTrain = True
+        
+        ###############
+        # Obsolete
+        ###############
+        
+        self.parser.add_argument('--lr', type=float, default=0.0001, help='initial learning rate for optimizer')

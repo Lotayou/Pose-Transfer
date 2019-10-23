@@ -2,18 +2,6 @@
 # Licensed under the CC BY-NC-SA 4.0 license
 # (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 
-# logger options (Deprecated, following patn_options)
-
-# optimization options
-max_iter: 100000              # maximum number of training iterations
-weight_decay: 0.0001          # weight decay
-lr_gen: 0.0001                # learning rate for the generator
-lr_dis: 0.0001                # learning rate for the discriminator
-init: kaiming                 # initialization [gaussian/kaiming/xavier/orthogonal]
-gan_w: 1                      # weight of adversarial loss for image translation
-fm_w: 1                       # weight on distance between gan features of style and translated image
-r_w: 0.1                      # weight of image reconstruction loss
-perc_w: 1                     # weight of perceptual loss
 
 # model options
 gen:
@@ -27,7 +15,7 @@ gen:
 dis:
   nf: 64                      # base number of filters
   n_res_blks: 10              # number of residual blocks in the discriminator
-  num_classes: 12028          # number of classes in the training set
+  num_classes: 12029          # number of classes in the training set
 
 # data options
 num_workers: 4
@@ -35,3 +23,20 @@ batch_size: 64
 new_size: 256                 # first resize the shortest image side to this size
 data_folder_train: ./fashion_data/train
 data_folder_test: ./fashion_data/test
+
+
+# deprecated options
+
+n_patchgan_layers: 4
+max_iter: 100000              # maximum number of training iterations
+weight_decay: 0.0001          # weight decay
+lr_gen: 0.0001                # learning rate for the generator
+lr_dis: 0.00005               # learning rate for the discriminator
+init: kaiming                 # initialization [gaussian/kaiming/xavier/orthogonal]
+gan_w: 1                      # weight of adversarial loss for image translation
+fm_w: 1                       # weight on distance between gan features of style and translated image
+r_w: 1                        # weight of image reconstruction loss
+perc_w: 1                     # weight of perceptual loss
+
+res_w: 0.5                    # weight of residual map
+n_patchgan_layers: 4

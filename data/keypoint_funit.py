@@ -105,18 +105,20 @@ class KeyFUNITDataset(BaseDataset):
                 flip_random = random.uniform(0, 1)
 
                 if flip_random > 0.5:
-                    # print('fliped ...')
+                    #print('fliped ...')
                     #P1_img = P1_img.transpose(Image.FLIP_LEFT_RIGHT)
                     #P2_img = P2_img.transpose(Image.FLIP_LEFT_RIGHT)
                     P1_img = P1_img[:,:,::-1]
                     P2_img = P2_img[:,:,::-1]
 
-                    BP1_img = np.array(BP1_img[:, ::-1, :])  # flip
-                    BP2_img = np.array(BP2_img[:, ::-1, :])  # flip
                     # 20191020: This is a potential bug.                     
                     # Left-right channels should be swapped along with spatial coordinates.
-                    # BP1_img = BP1_img[self.pose_swapping_index]
-                    # BP2_img = BP2_img[self.pose_swapping_index]
+                    # BP1_img = np.array(BP1_img[:, ::-1, :])  # flip
+                    # BP2_img = np.array(BP2_img[:, ::-1, :])  # flip
+                    BP1_img = np.array(BP1_img[:, :, ::-1])
+                    BP2_img = np.array(BP2_img[:, :, ::-1])
+                    BP1_img = BP1_img[self.pose_swapping_index]   # 20191022: Modification successful
+                    BP2_img = BP2_img[self.pose_swapping_index]
                     
 
             return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
