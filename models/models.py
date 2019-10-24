@@ -19,6 +19,11 @@ def create_model(opt):
         assert opt.dataset_mode == 'keypoint_funit'
         from .PATN_FUNIT_FULL import PatnFunitModel
         model = PatnFunitModel()
+    elif opt.model == 'PATN_FUNIT_FULL_v2':
+        assert opt.dataset_mode == 'keypoint_funit_v2', 'You must use v2 dataset with additional body part labels!'
+        from .PATN_FUNIT_FULL_v2 import PatnFunitModel
+        model = PatnFunitModel()
+        print('PATN_FUNIT_FULL_v2: Incorporate weighted L1 loss that focus more on clothes and face')
     elif opt.model == 'PATN_FUNIT_DEBUG':
         assert opt.dataset_mode == 'keypoint_funit'
         from .PATN_FUNIT_DEBUG import PatnFunitModel
