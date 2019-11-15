@@ -95,8 +95,8 @@ class KeyFUNITDataset(BaseDataset):
 
                 if flip_random > 0.5:
                     #print('fliped ...')
-                    P1_img = P1_img[:,:,::-1]
-                    P2_img = P2_img[:,:,::-1]
+                    P1_img = np.array(P1_img[:,:,::-1])
+                    P2_img = np.array(P2_img[:,:,::-1])
 
                     # 20191020: This is a potential bug.                     
                     # Left-right channels should be swapped along with spatial coordinates.

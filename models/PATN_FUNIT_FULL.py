@@ -105,7 +105,16 @@ class PatnFunitModel(BaseModel):
             self.PB_pool = MyImagePool(opt.pool_size)
             # set losses
             self.recon_loss = nn.L1Loss()
-            self.perceptual_loss = WassFeatureLoss()
+            # 20191113: Start to modify feature layer weights!
+            if opt.use_custom_vgg_weights:
+                self.perceptual_loss = WassFeatureLoss(
+                    layer_wgts=[10,5,2],
+                    wass_wgts=[3.0,0.7,0.01]
+                )
+            else:
+                # default: layer_wgts=[5,15,2], wass_wgts=[3.0,0.7,0.01]
+                self.perceptual_loss = WassFeatureLoss()
+            
             self.gan_loss = networks.GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
             
             # set optimizers
@@ -129,6 +138,9 @@ class PatnFunitModel(BaseModel):
         # Only FUNIT G2 need to be wrapped, other networks have inner wrapper
         if len(self.gpu_ids) > 1:
             self.G2 = nn.DataParallel(self.G2, device_ids=self.gpu_ids)
+            # 20191115: Manually load both discriminator as dataparallel object
+            # For MultiScaleDiscriminator, each small one is self wrapped
+                
     
     def set_input(self, input):
         # TODO: change dataset structure, automatically load all ground_truth images of the same person
@@ -167,8 +179,11 @@ class PatnFunitModel(BaseModel):
         G_input = [self.input_P1,
                    torch.cat((self.input_BP1, self.input_BP2), 1)]
         self.output_G1 = self.G1(G_input)
-        self.res = self.G2(self.output_G1, self.input_P1)
-        self.output_G2 = self.output_G1 + self.res
+        if self.opt.no_global_res:
+            self.output_G2 = self.G2(self.output_G1, self.input_P1)
+        else:
+            self.res = self.G2(self.output_G1, self.input_P1)
+            self.output_G2 = self.output_G1 + self.res
     
     def update_G1(self):
         self.opt_G1.zero_grad()
@@ -263,8 +278,11 @@ class PatnFunitModel(BaseModel):
         G_input = [self.input_P1, torch.cat((self.input_BP1, self.input_BP2), 1)]
         with torch.no_grad():
             self.output_G1 = self.G1(G_input)
-            self.res = self.G2(self.output_G1, self.input_P1)
-            self.output_G2 = self.output_G1 + self.res
+            if self.opt.no_global_res:
+                self.output_G2 = self.G2(self.output_G1, self.input_P1)
+            else:
+                self.res = self.G2(self.output_G1, self.input_P1)
+                self.output_G2 = self.output_G1 + self.res
         
     #############################
     ###  Utility Functions
@@ -278,7 +296,10 @@ class PatnFunitModel(BaseModel):
         P2 = util.tensor2im(self.input_P2.data)
         O1 = util.tensor2im(self.output_G1.data)
         O2 = util.tensor2im(self.output_G2.data)
-        r = util.tensor2im(self.res.data)
+        if self.opt.no_global_res:
+            r = util.draw_pose_from_map(self.input_BP2.data)[0]
+        else:
+            r = util.tensor2im(self.res.data)
         BP1 = util.draw_pose_from_map(self.input_BP1.data)[0]
         
         visual_tensor = np.concatenate((
