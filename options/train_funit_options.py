@@ -26,12 +26,14 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--pool_size', type=int, default=50, help='the size of image buffer that stores previously generated images')
         self.parser.add_argument('--lr_policy', type=str, default='lambda', help='learning rate policy: lambda|step|plateau')
         self.parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
-
+        
         self.parser.add_argument('--L1_type', type=str, default='origin', help='use which kind of L1 loss. (origin|l1_plus_perL1)')
         self.parser.add_argument('--perceptual_layers', type=int, default=3, help='index of vgg layer for extracting perceptual features.')
         self.parser.add_argument('--percep_is_l1', type=int, default=1, help='type of perceptual loss: l1 or l2')
         self.parser.add_argument('--no_dropout_D', action='store_true', help='no dropout for the discriminator')
         self.parser.add_argument('--DG_ratio', type=int, default=1, help='how many times for D training after training G once')
+
+        self.parser.add_argument('--use_custom_vgg_weights', action='store_true')
 
         self.isTrain = True
         
@@ -39,4 +41,3 @@ class TrainOptions(BaseOptions):
         # Obsolete
         ###############
         
-        self.parser.add_argument('--lr', type=float, default=0.0001, help='initial learning rate for optimizer')

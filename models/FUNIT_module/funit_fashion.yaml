@@ -8,7 +8,7 @@ gen:
   nf: 64                      # number of base filters in the generator
   n_res_blks: 2               # number of residual blocks in content encoder/decoder
   nf_mlp: 256                 # number of base filters in MLP module
-  latent_dim: 64              # dimension of the latent code for the class model
+  latent_dim: 128              # dimension of the latent code for the class model
   n_mlp_blks: 3               # number of mlp blocks
   n_downs_content: 3          # number of downsampling layers in content encoder
   n_downs_class: 4            # number of downsampling layers in class model encoder

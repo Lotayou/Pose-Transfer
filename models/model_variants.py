@@ -120,12 +120,23 @@ class PATNModel(nn.Module):
         model_stream1_up = []
         for i in range(n_downsampling):
             mult = 2**(n_downsampling - i)
+            # 20191028: Replace convtranspose2d to upsample/conv
+            '''
             model_stream1_up += [nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2),
                                          kernel_size=3, stride=2,
                                          padding=1, output_padding=1,
                                          bias=use_bias),
                             norm_layer(int(ngf * mult / 2)),
                             nn.ReLU(True)]
+            '''
+            model_stream1_up += [
+                nn.Upsample(scale_factor=2, mode='bilinear'),
+                nn.ReflectionPad2d(1),
+                nn.Conv2d(ngf * mult, ngf * mult // 2, 
+                    kernel_size=3, stride=1, bias=use_bias),
+                norm_layer(ngf * mult // 2),
+                nn.ReLU(True)
+            ]
 
         model_stream1_up += [nn.ReflectionPad2d(3)]
         model_stream1_up += [nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)]
@@ -162,7 +173,7 @@ class PATNetwork(nn.Module):
         self.model = PATNModel(input_nc, output_nc, ngf, norm_layer, use_dropout, n_blocks, gpu_ids, padding_type, n_downsampling=n_downsampling)
 
     def forward(self, input):
-        if self.gpu_ids and isinstance(input[0].data, torch.cuda.FloatTensor):
+        if len(self.gpu_ids) > 1 and isinstance(input[0].data, torch.cuda.FloatTensor):
             return nn.parallel.data_parallel(self.model, input, self.gpu_ids)
         else:
             return self.model(input)

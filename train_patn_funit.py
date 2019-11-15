@@ -12,7 +12,7 @@ cudnn.enabled = True
 cudnn.benchmark = True
 
 opt = TrainOptions().parse(
-	# use_debug_mode=True  # debug
+    #	use_debug_mode=True  # debug
     use_debug_mode=False
 )
 data_loader = CreateDataLoader(opt)
