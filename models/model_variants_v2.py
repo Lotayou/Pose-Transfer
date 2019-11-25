@@ -160,20 +160,24 @@ class PATNModel(nn.Module):
             x1, x2, _ = model(x1, x2)
 
         # up_sample
-        x1 = self.stream1_up(x1)
+        x_co = self.stream1_up(x1)
+        
+        return x1, x_co  # retain coarse feature map
 
-        return x1
 
-
-class PATNetwork(nn.Module):
+class PATNetwork_v2(nn.Module):
     def __init__(self, input_nc, output_nc, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, n_blocks=6, gpu_ids=[], padding_type='reflect', n_downsampling=2):
-        super(PATNetwork, self).__init__()
+        super(PATNetwork_v2, self).__init__()
         assert type(input_nc) == list and len(input_nc) == 2, 'The AttModule take input_nc in format of list only!!'
         self.gpu_ids = gpu_ids
         self.model = PATNModel(input_nc, output_nc, ngf, norm_layer, use_dropout, n_blocks, gpu_ids, padding_type, n_downsampling=n_downsampling)
+        
+        
+        print('PATNetwork_v2 model used')
 
     def forward(self, input):
         if len(self.gpu_ids) > 1 and isinstance(input[0].data, torch.cuda.FloatTensor):
+            print('inside PATNetwork')
             return nn.parallel.data_parallel(self.model, input, self.gpu_ids)
         else:
             return self.model(input)

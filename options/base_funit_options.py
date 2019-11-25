@@ -55,7 +55,7 @@ class BaseOptions():
         ### 20180927 Yang Lingbo
         # Add funit config
         self.parser.add_argument('--funit_options', type=str, default='./models/FUNIT_module/funit_fashion.yaml', help='configuration file for funit module')
-        self.parser.add_argument('--use_global_res', action='store_true', help='If specified, let stage II net predict the residual between ground truth and stage I output.')
+        self.parser.add_argument('--no_global_res', action='store_true', help='If specified, let stage II net predict the final output directly instead of global residual between ground truth and stage I output.')
         self.initialized = True
 
     ### 20191003: Add debug mode options

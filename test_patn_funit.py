@@ -18,6 +18,7 @@ def padding(x):
     _im[:, _left: _left + _w, :] = x
     return _im
     
+#os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 opt = TestOptions().parse(
 	#use_debug_mode=True  # debug

@@ -19,17 +19,11 @@ from .losses.alibaba_vgg_loss import WassFeatureLoss
 
 
 '''
-20191018: A brand_new version of PatnFunitModel
+20191125: RATE-Net: A brand_new version of PatnFunitModel
 
 @ Network Architecture:
 
-                           PATN_G                                    BP2 -----| D_pose                       
-            (P1, BP1, BP2) ------> patn_fake_p2 -------|  FUNIT               |-------> pose aligned?
-                                                       |---------> final_p2 --| 
-                        Ys = (y1,y2,...yk) ------------|                      |-------> real/fake?
-                                                                    P1/P2-----| D_app
-                                                                      
-    
+    See ICME 2020 paper=
     PATN generator; FUNIT FewShotGen, appearance and pose conditional discriminators.
     
 @ Training strategy (default 2.A):
@@ -47,15 +41,15 @@ from .losses.alibaba_vgg_loss import WassFeatureLoss
 @ Author: Lingbo Yang
 '''
 
-class PatnFunitModel(BaseModel):
+class RATEModel(BaseModel):
     def name(self):
-        return 'PATH_FUNIT_FULL Model'
+        return 'LATE Model'
     
     ##########################
     ### Pre-training steps
     ##########################
     def initialize(self, opt):
-        super(PatnFunitModel, self).initialize(opt)
+        super(RATEModel, self).initialize(opt)
         with open(opt.funit_options, 'r') as fin:
             self.funit_opt = yaml.load(fin, Loader=yaml.FullLoader)
         
@@ -105,15 +99,8 @@ class PatnFunitModel(BaseModel):
             self.PB_pool = MyImagePool(opt.pool_size)
             # set losses
             self.recon_loss = nn.L1Loss()
-            # 20191113: Start to modify feature layer weights!
-            if opt.use_custom_vgg_weights:
-                self.perceptual_loss = WassFeatureLoss(
-                    layer_wgts=[10,5,2],
-                    wass_wgts=[3.0,0.7,0.01]
-                )
-            else:
-                # default: layer_wgts=[5,15,2], wass_wgts=[3.0,0.7,0.01]
-                self.perceptual_loss = WassFeatureLoss()
+            
+            self.perceptual_loss = WassFeatureLoss()
             
             self.gan_loss = networks.GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
             
@@ -169,20 +156,22 @@ class PatnFunitModel(BaseModel):
         self.G1.train()
         G_input = [self.input_P1,
                    torch.cat((self.input_BP1, self.input_BP2), 1)]
-        self.output_G1 = self.G1(G_input)
+        self.Ft, self.output_G1 = self.G1(G_input)
             
     def G2_forward(self):
         # rb = G2(D(E_co(B1), E_cl(PA))
         self.G1.train()
         self.G2.train()
         # perform G1 forward again, since G1 has been updated once and graph is freed
-        G_input = [self.input_P1,
-                   torch.cat((self.input_BP1, self.input_BP2), 1)]
-        self.output_G1 = self.G1(G_input)
+        # G_input = [self.input_P1,
+        #           torch.cat((self.input_BP1, self.input_BP2), 1)]
+        # self.output_G1 = self.G1(G_input)
+        
+        # 20191125: We directly use Ft for spatial guidance.
         if self.opt.no_global_res:
-            self.output_G2 = self.G2(self.output_G1, self.input_P1)
+            self.output_G2 = self.G2(None, self.input_P1, content=self.Ft)
         else:
-            self.res = self.G2(self.output_G1, self.input_P1)
+            self.res = self.G2(None, self.input_P1, content=self.Ft)
             self.output_G2 = self.output_G1 + self.res
     
     def update_G1(self):
@@ -192,7 +181,7 @@ class PatnFunitModel(BaseModel):
         vgg_loss = self.perceptual_loss(self.output_G1, self.input_P2)
         total_loss = self.opt.lambda_vgg * vgg_loss + self.opt.lambda_l1 * l1_loss
         
-        total_loss.backward()   # save for the next update of G2
+        total_loss.backward(retain_graph=True)   # save for the next update of G2
         self.opt_G1.step()
         
         # self.G1_loss_dict = {
@@ -277,11 +266,11 @@ class PatnFunitModel(BaseModel):
     def test(self):
         G_input = [self.input_P1, torch.cat((self.input_BP1, self.input_BP2), 1)]
         with torch.no_grad():
-            self.output_G1 = self.G1(G_input)
+            self.Ft, self.output_G1 = self.G1(G_input)
             if self.opt.no_global_res:
-                self.output_G2 = self.G2(self.output_G1, self.input_P1)
+                self.output_G2 = self.G2(None, self.input_P1, content=self.Ft)
             else:
-                self.res = self.G2(self.output_G1, self.input_P1)
+                self.res = self.G2(None, self.input_P1, content=self.Ft)
                 self.output_G2 = self.output_G1 + self.res
         
     #############################
