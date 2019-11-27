@@ -70,7 +70,7 @@ class BaseModel(nn.Module):
             from collections import OrderedDict
             correct_dict = OrderedDict()
             for k, v in state_dict.items():
-                kk = k[7:]
+                kk = k.replace('module.', '')
                 correct_dict[kk] = v
             network.load_state_dict(correct_dict)
         finally:

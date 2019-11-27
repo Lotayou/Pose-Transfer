@@ -65,6 +65,9 @@ class BaseOptions():
         self.opt = self.parser.parse_args()
         self.opt.isTrain = self.isTrain   # train or test
         
+        # 20191125: Bug, cannot change this parameter inside shell script.
+        self.opt.which_model_netG = 'PATN_v2'
+        
         if use_debug_mode:
             self.opt.niter = 2
             self.opt.niter_decay = 2
@@ -74,6 +77,7 @@ class BaseOptions():
             self.opt.print_freq = 1
             self.opt.save_latest_freq = 2
             self.opt.save_epoch_freq = 2
+            self.opt.which_model_netG = 'PATN_v2'
             self.opt.name = 'debug'
 
         str_ids = self.opt.gpu_ids.split(',')

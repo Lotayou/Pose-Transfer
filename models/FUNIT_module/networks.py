@@ -151,17 +151,25 @@ class FewShotGen(nn.Module):
                        norm='none',
                        activ='relu')
 
-    def forward(self, one_image, model_set):
+    ### 20191125: Create a shortcut for pose map estimated from the transfer branch.
+    # IF content is not None, one_image will not be used
+    #def forward(self, one_image, model_set):
+    def forward(self, one_image, model_set, content=None):
         # reconstruct an image
-        content, model_code = self.encode(one_image, model_set)
+        content, model_code = self.encode(one_image, model_set, content=content)
         # 20191018: Who the fuck wrote this ?!
         # model_code = torch.mean(model_code, dim=0).unsqueeze(0)
         images_trans = self.decode(content, model_code)
         return images_trans
 
-    def encode(self, one_image, model_set):
+    #def encode(self, one_image, model_set):
+    def encode(self, one_image, model_set, content=None):
         # extract content code from the input image
-        content = self.enc_content(one_image)
+        if content is None:
+            content = self.enc_content(one_image)
+        else:
+            # 20191125 the input one_image is useless.
+            pass
         # extract model code from the images in the model set
         class_code = self.enc_class_model(model_set)
         # 20191018: Who the fuck wrote this ?!
