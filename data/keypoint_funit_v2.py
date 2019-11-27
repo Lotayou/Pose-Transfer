@@ -95,14 +95,13 @@ class KeyFUNITDataset(BaseDataset):
         BP1_img = np.load(BP1_path)  # h, w, c
         BP2_img = np.load(BP2_path)
         
-
+        PLW1_path = os.path.join(self.dir_L, P1_name.split('.')[0] + '.npy') # part labels of person 1
+        PLW2_path = os.path.join(self.dir_L, P2_name.split('.')[0] + '.npy') # part labels of person 2
+        PLW1_img = np.load(PLW1_path)
+        PLW2_img = np.load(PLW2_path)
+        
         # use flip
         if self.opt.phase == 'train':
-            PLW1_path = os.path.join(self.dir_L, P1_name.split('.')[0] + '.npy') # part labels of person 1
-            PLW2_path = os.path.join(self.dir_L, P2_name.split('.')[0] + '.npy') # part labels of person 2
-            PLW1_img = np.load(PLW1_path)
-            PLW2_img = np.load(PLW2_path)
-            
             if not self.opt.no_flip:
                 flip_random = random.uniform(0, 1)
 
@@ -150,8 +149,15 @@ class KeyFUNITDataset(BaseDataset):
              
             BP1 = torch.from_numpy(BP1_img).float().permute(2,0,1)
             BP2 = torch.from_numpy(BP2_img).float().permute(2,0,1)
+            
+            PLW1 = torch.from_numpy(PLW1_img).float()
+            PLW1 = torch.stack((PLW1,) * 3, dim=0) # expand to 3 channel
+            PLW2 = torch.from_numpy(PLW2_img).float()
+            PLW2 = torch.stack((PLW2,) * 3, dim=0)
+            
             return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,
                 'P1_path': P1_name, 'P2_path': P2_name, 
+                'PLW1': PLW1, 'PLW2': PLW2,
                 # 'Ys': Ys,
                 'label': label}
         
@@ -160,7 +166,7 @@ class KeyFUNITDataset(BaseDataset):
         return self.size
 
     def name(self):
-        return 'KeyFUNITDataset'
+        return 'KeyFUNITv2Dataset'
 
 
 if __name__ == '__main__':

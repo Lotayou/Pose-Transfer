@@ -7,7 +7,6 @@ import numpy as np
 import torch.nn.functional as F
 
 import sys
-from .model_variants import PATNetwork
 
 def weights_init_normal(m):
     classname = m.__class__.__name__
@@ -110,12 +109,18 @@ def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropo
     if use_gpu:
         assert (torch.cuda.is_available())
 
+    assert len(input_nc) == 2
     if which_model_netG == 'PATN':
-        assert len(input_nc) == 2
+        from .model_variants import PATNetwork
         netG = PATNetwork(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
-                                           n_blocks=9, gpu_ids=gpu_ids, n_downsampling=n_downsampling)
+                       n_blocks=9, gpu_ids=gpu_ids, n_downsampling=n_downsampling)
+    elif which_model_netG == 'PATN_v2':
+        from .model_variants_v2 import PATNetwork_v2
+        netG = PATNetwork_v2(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
+                       n_blocks=9, gpu_ids=gpu_ids, n_downsampling=n_downsampling)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % which_model_netG)
+        
     if len(gpu_ids) > 0:
         netG.cuda(gpu_ids[0])
     init_weights(netG, init_type=init_type)
